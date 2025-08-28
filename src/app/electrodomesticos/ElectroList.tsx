@@ -14,6 +14,7 @@ type ElectroItem = {
   urlImg?: string;
   hasDefect?: boolean; // 👈 nuevo campo para ocasión
 };
+type ElectroItemData = Omit<ElectroItem, 'id'>;
 
 export function ElectroList() {
   const [items, setItems] = useState<ElectroItem[]>([]);
@@ -31,7 +32,7 @@ export function ElectroList() {
         const snap = await getDocs(q);
         const data: ElectroItem[] = snap.docs.map((d) => ({
           id: d.id,
-          ...(d.data() as any),
+          ...(d.data() as ElectroItemData),
         }));
 
         setItems(data);
@@ -42,9 +43,13 @@ export function ElectroList() {
           new Set(data.map((p) => p.category || 'Sin categoría'))
         );
         setCategories(['Todos', 'Ocasión', ...uniqueCategories]);
-      } catch (e: any) {
+      } catch (e: unknown) {
         console.error('Firestore error:', e);
-        setError(e?.message || 'Error al cargar productos');
+        if (e && typeof e === 'object' && 'message' in e) {
+          setError((e as { message: string }).message);
+        } else {
+          setError('Error al cargar productos');
+        }
       } finally {
         setLoading(false);
       }

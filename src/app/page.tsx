@@ -5,8 +5,6 @@ import { Button } from 'primereact/button';
 import { Divider } from 'primereact/divider';
 import { Panel } from 'primereact/panel';
 import { Message } from 'primereact/message';
-import { Menubar } from 'primereact/menubar';
-import { Avatar } from 'primereact/avatar';
 
 export default function Home() {
   const menuItems = [

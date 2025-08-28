@@ -10,6 +10,7 @@ import { IconField } from 'primereact/iconfield';
 import { InputIcon } from 'primereact/inputicon';
 import styles from './Navbar.module.css';
 import { Button } from 'primereact/button';
+import Link from 'next/link';
 
 export function Navbar() {
   const [search, setSearch] = useState('');
@@ -31,10 +32,10 @@ export function Navbar() {
   ];
 
   const start = (
-    <a href="/" className={styles.logo}>
+    <Link href="/" className={styles.logo}>
       <Image src="/todo_hogar_logo.svg" alt="Todo Hogar Factory" width={120} height={32} priority />
-    </a>
-  );
+    </Link>
+  )
 
   const desktopSearchForm = (
     <form

@@ -9,6 +9,7 @@ import 'primeicons/primeicons.css'; // Iconos
 import 'primeflex/primeflex.css'; // Utilidades de layout
 
 
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
