@@ -1,0 +1,67 @@
+.header {
+    width: 100%;
+    background-color: #ff4a23;
+    color: white;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  .menubar {
+    background-color: #ff4a23;
+    color: white;
+    border: none;
+  }
+  
+  .logo {
+    display: flex;
+    align-items: center;
+  }
+  
+  .searchForm, .searchFormModal {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .dropdown {
+    min-width: 120px;
+  }
+  
+  .searchButton {
+    background-color: white;
+    color: #ff4a23;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+  }
+  
+  /* Responsive */
+  .desktopOnly {
+    display: block;
+  }
+  
+  .mobileOnly {
+    display: none;
+  }
+  
+  /* Solo mostrar el botón en móvil */
+  @media (max-width: 768px) {
+    .desktopOnly {
+      display: none;
+    }
+  
+    .mobileOnly {
+      display: block;
+    }
+  
+    .searchFormModal {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  
+    .dropdown,
+    .p-inputtext,
+    .searchButton {
+      width: 100%;
+    }
+  }
+  
