@@ -3,6 +3,43 @@
 import { useEffect, useState } from 'react';
 import { collection, getDocs, query } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import Image from 'next/image';
+
+// Componente para manejar errores de carga de imágenes
+function ProductImage({ src, alt }: { src: string; alt: string }) {
+  const [imgError, setImgError] = useState(false);
+  const [imgSrc, setImgSrc] = useState(src);
+
+  useEffect(() => {
+    setImgSrc(src);
+    setImgError(false);
+  }, [src]);
+
+  if (imgError) {
+    return (
+      <div className="w-full h-40 bg-gray-200 rounded-md flex items-center justify-center text-gray-500">
+        Error al cargar imagen
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative w-full h-40 rounded-md overflow-hidden bg-gray-200">
+      <Image
+        src={imgSrc}
+        alt={alt}
+        fill
+        className="object-cover"
+        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+        unoptimized={imgSrc.includes('firebasestorage') || imgSrc.includes('firebase')}
+        onError={() => {
+          console.error('Error cargando imagen:', imgSrc);
+          setImgError(true);
+        }}
+      />
+    </div>
+  );
+}
 
 type ElectroItem = {
   id: string;
@@ -140,12 +177,7 @@ export function ElectroList() {
               )}
 
               {p.urlImg ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={p.urlImg}
-                  alt={p.name}
-                  className="w-full h-40 object-cover rounded-md"
-                />
+                <ProductImage src={p.urlImg} alt={p.name} />
               ) : (
                 <div className="w-full h-40 bg-gray-200 rounded-md flex items-center justify-center text-gray-500">
                   Sin imagen
