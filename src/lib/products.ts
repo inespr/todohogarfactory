@@ -1,15 +1,23 @@
-export type ProductCategory = "electrodomesticos" | "sofas" | "hogar";
+export type ProductCategory = "electrodomesticos" | "sofas" | "hogar" | "descanso";
 
 export type ElectroSubcategory = "lavadora" | "secadora" | "frigorifico-combi" | "arcon-congelador" | "placa-induccion" | "placa-gas" | "microondas" | "lavavajillas";
 export type SofaSubcategory = "sofa-cama" | "chaise-longue" | "sillon" | "butaca" | "3+2";
 export type HogarSubcategory = "cafetera-italiana" | "cafetera" | "ollas" | "cubiertos" | "vasos" | "secador" | "ropa-cama" | "toallas";
+export type DescansoSubcategory =
+  | "colchones"
+  | "almohadas"
+  | "canapes"
+  | "bases"
+  | "somieres"
+  | "protectores"
+  | "cabeceros";
 
 export interface Product {
   id: string;
   name: string;
   description: string;
   category: ProductCategory;
-  subcategory?: ElectroSubcategory | SofaSubcategory | HogarSubcategory;
+  subcategory?: ElectroSubcategory | SofaSubcategory | HogarSubcategory | DescansoSubcategory;
 }
 
 export const PRODUCTS: Product[] = [
@@ -37,6 +45,12 @@ export const PRODUCTS: Product[] = [
   { id: "hg-6", name: "Secador de Pelo", description: "Iónico y potente", category: "hogar", subcategory: "secador" },
   { id: "hg-7", name: "Ropa de Cama", description: "Sábanas y fundas nórdicas", category: "hogar", subcategory: "ropa-cama" },
   { id: "hg-8", name: "Juego de Toallas", description: "Algodón 100%", category: "hogar", subcategory: "toallas" },
+  // Descanso (Naturcolchó)
+  { id: "ds-1", name: "Colchones Naturcolchó", description: "Confort y soporte para tu descanso", category: "descanso", subcategory: "colchones" },
+  { id: "ds-2", name: "Almohadas Naturcolchó", description: "Visco, fibra y distintas firmezas", category: "descanso", subcategory: "almohadas" },
+  { id: "ds-3", name: "Canapés Naturcolchó", description: "Almacenaje extra con apertura cómoda", category: "descanso", subcategory: "canapes" },
+  { id: "ds-4", name: "Bases Naturcolchó", description: "Base tapizada para un conjunto perfecto", category: "descanso", subcategory: "bases" },
+  { id: "ds-5", name: "Somieres Naturcolchó", description: "Estructuras resistentes y ventilación", category: "descanso", subcategory: "somieres" },
 ];
 
 export function getProductsByCategory(category: ProductCategory): Product[] {
@@ -45,7 +59,7 @@ export function getProductsByCategory(category: ProductCategory): Product[] {
 
 export function getProductsBySubcategory(
   category: ProductCategory,
-  subcategory: ElectroSubcategory | SofaSubcategory | HogarSubcategory
+  subcategory: ElectroSubcategory | SofaSubcategory | HogarSubcategory | DescansoSubcategory
 ): Product[] {
   return PRODUCTS.filter((p) => p.category === category && p.subcategory === subcategory);
 }
@@ -79,6 +93,10 @@ export function searchProducts(params: {
   });
 }
 
+export function getProductById(id: string): Product | undefined {
+  return PRODUCTS.find((p) => p.id === id);
+}
+
 // Mapeo de subcategorías a nombres legibles
 export const SUBCATEGORY_NAMES: Record<string, string> = {
   // Electrodomésticos
@@ -105,6 +123,14 @@ export const SUBCATEGORY_NAMES: Record<string, string> = {
   "secador": "Secador",
   "ropa-cama": "Ropa de Cama",
   "toallas": "Toallas",
+  // Descanso
+  "colchones": "Colchones",
+  "almohadas": "Almohadas",
+  "canapes": "Canapés",
+  "bases": "Bases",
+  "somieres": "Somieres",
+  "protectores": "Protectores",
+  "cabeceros": "Cabeceros",
 };
 
 

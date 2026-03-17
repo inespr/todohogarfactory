@@ -167,7 +167,7 @@ export function ElectroList() {
           {filteredItems.map((p) => (
             <div
               key={p.id}
-              className="relative rounded-lg border border-black/[.08] dark:border-white/[.145] p-6 space-y-2 bg-white shadow-sm hover:shadow-md transition"
+              className="relative h-full flex flex-col rounded-lg border border-black/[.08] dark:border-white/[.145] p-6 bg-white shadow-sm hover:shadow-md transition"
             >
               {/* Badge de ocasión arriba a la izquierda */}
               {p.hasDefect && (
@@ -184,10 +184,10 @@ export function ElectroList() {
                 </div>
               )}
 
-              <h3 className="font-semibold">{p.name}</h3>
-              <p className="opacity-70 text-sm">{p.description}</p>
+              <h3 className="mt-3 font-semibold">{p.name}</h3>
+              <p className="opacity-70 text-sm line-clamp-3">{p.description}</p>
 
-              <div className="flex items-center justify-between pt-2">
+              <div className="mt-auto flex items-center justify-between pt-4">
                 <span className="font-medium">
                   {p.price?.toLocaleString('es-ES', {
                     style: 'currency',

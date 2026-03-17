@@ -1,14 +1,45 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { PRODUCTS, Product } from '../lib/products';
-import { Card as UiCard, CardHeader, CardBody } from '../components/Card';
 
 function getFeaturedProducts(): Product[] {
   const el = PRODUCTS.filter((p) => p.category === 'electrodomesticos').slice(0, 2);
   const sf = PRODUCTS.filter((p) => p.category === 'sofas').slice(0, 2);
   const hg = PRODUCTS.filter((p) => p.category === 'hogar').slice(0, 2);
-  return [...el, ...sf, ...hg];
+  const ds = PRODUCTS.filter((p) => p.category === 'descanso').slice(0, 2);
+  return [...el, ...sf, ...hg, ...ds];
+}
+
+function getCategoryHref(category: Product['category']) {
+  return category === 'electrodomesticos'
+    ? '/electrodomesticos'
+    : category === 'sofas'
+      ? '/sofas'
+      : category === 'hogar'
+        ? '/hogar'
+        : '/descanso';
+}
+
+function getCategoryLabel(category: Product['category']) {
+  return category === 'electrodomesticos'
+    ? 'Electrodomésticos'
+    : category === 'sofas'
+      ? 'Sofás'
+      : category === 'hogar'
+        ? 'Hogar'
+        : 'Descanso · Naturcolchó';
+}
+
+function getPlaceholderImage(category: Product['category']) {
+  return category === 'electrodomesticos'
+    ? '/placeholders/electrodomesticos.svg'
+    : category === 'sofas'
+      ? '/placeholders/sofas.svg'
+      : category === 'hogar'
+        ? '/placeholders/hogar.svg'
+        : '/placeholders/descanso.svg';
 }
 
 export default function Home() {
@@ -16,40 +47,57 @@ export default function Home() {
 
   return (
     <>
-      <div className="max-w-5xl mx-auto px-4 py-12">
-        {/* Selección de productos variados */}
+      <div className="max-w-6xl mx-auto px-4 py-8 sm:py-10">
         <section>
-          <h1 className="text-2xl font-semibold mb-8 text-center">
-            Selección de productos
-          </h1>
+          <div className="mb-5 flex items-end justify-between gap-4">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Destacados</h1>
+              <p className="mt-1 text-sm text-neutral-600">
+                Vista de ejemplo con imágenes de prueba para que el catálogo se vea más profesional.
+              </p>
+            </div>
+            <Link href="/productos" className="text-sm font-semibold text-orange-700 hover:underline">
+              Ver todo el catálogo
+            </Link>
+          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
             {featuredProducts.map((product) => (
-              <UiCard key={product.id}>
-                <CardHeader
-                  title={product.name}
-                  actions={
-                    <span className="px-2 py-1 rounded-full text-xs bg-neutral-100 text-neutral-700 capitalize">
-                      {product.category}
+              <Link
+                key={product.id}
+                href={getCategoryHref(product.category)}
+                className="group h-full min-h-[420px] flex flex-col rounded-2xl border border-black/[.08] bg-white overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+              >
+                <div className="relative aspect-[4/3] bg-neutral-50">
+                  <Image
+                    src={getPlaceholderImage(product.category)}
+                    alt={getCategoryLabel(product.category)}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    priority={false}
+                  />
+                  <div className="absolute left-3 top-3">
+                    <span className="inline-flex items-center rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-neutral-800 shadow-sm">
+                      {getCategoryLabel(product.category)}
                     </span>
-                  }
-                />
-                <CardBody>
-                  <p className="text-sm text-neutral-600 mb-4">{product.description}</p>
-                  <Link
-                    href={
-                      product.category === 'electrodomesticos'
-                        ? '/electrodomesticos'
-                        : product.category === 'sofas'
-                        ? '/sofas'
-                        : '/hogar'
-                    }
-                    className="inline-flex items-center text-sm font-medium text-neutral-800 hover:underline"
-                  >
-                    Ver más
-                  </Link>
-                </CardBody>
-              </UiCard>
+                  </div>
+                </div>
+
+                <div className="p-5 flex flex-col flex-1">
+                  <h2 className="text-base sm:text-lg font-semibold text-neutral-900 group-hover:text-neutral-950">
+                    {product.name}
+                  </h2>
+                  <p className="mt-1 text-sm text-neutral-600 line-clamp-2">{product.description}</p>
+
+                  <div className="mt-auto pt-4 inline-flex items-center gap-2 text-sm font-semibold text-orange-700">
+                    Ver más en {getCategoryLabel(product.category)}
+                    <span className="transition-transform group-hover:translate-x-0.5" aria-hidden="true">
+                      →
+                    </span>
+                  </div>
+                </div>
+              </Link>
             ))}
           </div>
         </section>

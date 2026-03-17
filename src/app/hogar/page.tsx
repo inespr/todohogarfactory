@@ -14,9 +14,12 @@ export default function HogarPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {products.map((p) => (
-          <div key={p.id} className="rounded-lg border border-black/[.08] dark:border-white/[.145] p-6">
+          <div
+            key={p.id}
+            className="h-full flex flex-col rounded-lg border border-black/[.08] dark:border-white/[.145] p-6 bg-white shadow-sm"
+          >
             <h3 className="font-semibold mb-1">{p.name}</h3>
-            <p className="opacity-70 text-sm">{p.description}</p>
+            <p className="opacity-70 text-sm line-clamp-3">{p.description}</p>
           </div>
         ))}
       </div>

@@ -1,5 +1,4 @@
-import type { Metadata } from "next";
-import Image from "next/image";
+import type { Metadata, Viewport } from "next";
 import { Navbar } from "@/components/Navbar/Navbar";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -23,6 +22,15 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Todo Hogar Factory",
   description: "Tienda de electrodomésticos, sofás y artículos para el hogar.",
+  icons: {
+    icon: "/todo_hogar_redondo.svg",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -36,7 +44,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Navbar />
-        <main className="min-h-[70vh]">
+        <main className="min-h-[70vh] pageShell">
           {children}
         </main>
         <footer className="w-full border-t border-black/[.08] dark:border-white/[.145] mt-12">

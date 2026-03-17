@@ -7,9 +7,9 @@ export const metadata = {
 
 function ResultCard({ name, description }: { name: string; description: string }) {
   return (
-    <div className="rounded-lg border border-black/[.08] dark:border-white/[.145] p-6">
+    <div className="h-full flex flex-col rounded-lg border border-black/[.08] dark:border-white/[.145] p-6 bg-white shadow-sm">
       <h3 className="font-semibold mb-1">{name}</h3>
-      <p className="opacity-70 text-sm">{description}</p>
+      <p className="opacity-70 text-sm line-clamp-3">{description}</p>
     </div>
   );
 }

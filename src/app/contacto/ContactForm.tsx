@@ -70,15 +70,6 @@ export function ContactForm({ onSuccess }: ContactFormProps) {
     }
   };
 
-  const handleReset = () => {
-    setIsSuccess(false);
-    setStatus(null);
-    setNombre('');
-    setEmail('');
-    setMensaje('');
-    onSuccess?.(false, null);
-  };
-
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="field">
@@ -121,16 +112,18 @@ interface InfoTiendaProps {
 export function InfoTienda({ telefono, whatsapp }: InfoTiendaProps) {
   return (
     <Card className="shadow-lg" title="Información de la tienda">
-      <div className="space-y-3 text-gray-700 dark:text-gray-300">
-        <p className="flex items-center gap-2">
+      <div className="text-gray-700 dark:text-gray-300">
+        <p className="flex flex-wrap items-center gap-2 break-words">
           <i className="pi pi-map-marker"></i>
           <strong>Dirección:</strong> Av. de la Constitución, 7, 21600 Valverde del Camino, Huelva
         </p>
-        <p className="flex items-center gap-2">
+        <Divider className="my-3" />
+        <p className="flex flex-wrap items-center gap-2 break-words">
           <i className="pi pi-clock"></i>
           <strong>Horario:</strong> Cerrado ⋅ Apertura: 9:30
         </p>
-        <p className="flex items-center gap-2">
+        <Divider className="my-3" />
+        <p className="flex flex-wrap items-center gap-2 break-words">
           <i className="pi pi-phone"></i>
           <strong>Teléfono:</strong> {telefono}
           <Button

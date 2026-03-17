@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1f2937"/>
+      <stop offset="1" stop-color="#0b1220"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" rx="48" fill="url(#bg)"/>
+  <rect x="90" y="90" width="1020" height="620" rx="44" fill="#ffffff" opacity="0.06"/>
+  <g fill="none" stroke="#ff6708" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" opacity="0.95">
+    <path d="M310 480c0-64 52-116 116-116h348c64 0 116 52 116 116v66H310v-66Z"/>
+    <path d="M360 360c0-55 45-100 100-100h280c55 0 100 45 100 100v16H360v-16Z"/>
+    <path d="M352 546v66M848 546v66"/>
+  </g>
+  <g fill="#ffffff" opacity="0.92" font-family="system-ui, -apple-system, Segoe UI, Roboto, Arial" text-anchor="middle">
+    <text x="600" y="690" font-size="44" font-weight="700">Sof�s</text>
+    <text x="600" y="735" font-size="26" opacity="0.75">Imagen de prueba</text>
+  </g>
+</svg>
