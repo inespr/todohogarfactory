@@ -80,8 +80,8 @@ export function CategoryList({ collection: collectionName, placeholder, detailBa
       if (selectedCategory === 'Ocasión') updated = updated.filter((p) => p.hasDefect);
       else updated = updated.filter((p) => (p.category || '').trim().toLowerCase() === selectedCategory.toLowerCase());
     }
-    if (sortBy === 'price-asc') updated.sort((a, b) => a.price - b.price);
-    else if (sortBy === 'price-desc') updated.sort((a, b) => b.price - a.price);
+    if (sortBy === 'price-asc') updated.sort((a, b) => (a.price ?? 0) - (b.price ?? 0));
+    else if (sortBy === 'price-desc') updated.sort((a, b) => (b.price ?? 0) - (a.price ?? 0));
     else if (sortBy === 'name-asc') updated.sort((a, b) => a.name.localeCompare(b.name));
     else if (sortBy === 'name-desc') updated.sort((a, b) => b.name.localeCompare(a.name));
     setFilteredItems(updated);
