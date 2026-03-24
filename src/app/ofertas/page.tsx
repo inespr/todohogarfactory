@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { getProductsByCategory } from "@/lib/products";
+import Image from "next/image";
 
 export const metadata = {
   title: "Ofertas | Todo Hogar Factory",
@@ -6,73 +8,47 @@ export const metadata = {
 };
 
 export default function OfertasPage() {
-  const electro = getProductsByCategory("electrodomesticos").slice(0, 4);
-  const sofas = getProductsByCategory("sofas").slice(0, 4);
-  const hogar = getProductsByCategory("hogar").slice(0, 4);
+  const products = getProductsByCategory("electrodomesticos");
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-10">
-      <h1 className="text-3xl font-bold mb-3 text-center">Ofertas</h1>
-      <p className="opacity-80 mb-8 text-center max-w-2xl mx-auto">
-        Descubre una selección de productos destacados con precio especial. Para ver todas las ofertas
-        disponibles, consúltanos en tienda o por WhatsApp.
-      </p>
-
-      <div className="space-y-10">
-        <section>
-          <h2 className="text-xl font-semibold mb-4">Electrodomésticos en oferta</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {electro.map((p) => (
-              <article
-                key={p.id}
-                className="h-full flex flex-col rounded-lg border border-black/[.08] p-6 bg-white shadow-sm hover:shadow-md transition"
+    <div className="max-w-7xl mx-auto px-4 py-10">
+      <h1 className="text-2xl font-bold mb-6">Ofertas</h1>
+      {products.length === 0 ? (
+        <p className="text-center opacity-70 py-16">No hay productos disponibles.</p>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4" style={{ gridAutoRows: "280px" }}>
+          {products.map((p) => (
+            <div key={p.id} style={{ height: "280px", minHeight: "280px", maxHeight: "280px" }}>
+              <Link
+                href={`/productos/${p.id}`}
+                className="group flex flex-col bg-white rounded-2xl border border-neutral-200 overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all w-full"
+                style={{ height: "280px" }}
               >
-                <h3 className="font-semibold mb-1">{p.name}</h3>
-                <p className="opacity-70 text-sm mb-3 line-clamp-3">{p.description}</p>
-                <p className="mt-auto text-xs uppercase tracking-wide text-orange-600 font-semibold">
-                  Oferta en tienda
-                </p>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section>
-          <h2 className="text-xl font-semibold mb-4">Sofás en oferta</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sofas.map((p) => (
-              <article
-                key={p.id}
-                className="h-full flex flex-col rounded-lg border border-black/[.08] p-6 bg-white shadow-sm hover:shadow-md transition"
-              >
-                <h3 className="font-semibold mb-1">{p.name}</h3>
-                <p className="opacity-70 text-sm mb-3 line-clamp-3">{p.description}</p>
-                <p className="mt-auto text-xs uppercase tracking-wide text-orange-600 font-semibold">
-                  Oferta en tienda
-                </p>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section>
-          <h2 className="text-xl font-semibold mb-4">Hogar en oferta</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {hogar.map((p) => (
-              <article
-                key={p.id}
-                className="h-full flex flex-col rounded-lg border border-black/[.08] p-6 bg-white shadow-sm hover:shadow-md transition"
-              >
-                <h3 className="font-semibold mb-1">{p.name}</h3>
-                <p className="opacity-70 text-sm mb-3 line-clamp-3">{p.description}</p>
-                <p className="mt-auto text-xs uppercase tracking-wide text-orange-600 font-semibold">
-                  Oferta en tienda
-                </p>
-              </article>
-            ))}
-          </div>
-        </section>
-      </div>
+                <div className="relative bg-neutral-50 shrink-0" style={{ height: "160px", minHeight: "160px" }}>
+                  <Image
+                    src="/placeholders/electrodomesticos.svg"
+                    alt={p.name}
+                    fill
+                    className="object-contain p-3"
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                  />
+                  <div className="absolute left-3 top-3">
+                    <span className="inline-flex items-center rounded-full bg-red-600 text-white px-2 py-1 text-xs font-semibold shadow-sm">
+                      Oferta
+                    </span>
+                  </div>
+                </div>
+                <div className="p-3 flex flex-col flex-1 min-w-0">
+                  <h3 className="text-sm font-semibold text-neutral-900 group-hover:text-neutral-950 line-clamp-2">
+                    {p.name}
+                  </h3>
+                  <p className="text-xs text-neutral-600 mt-1 line-clamp-2">{p.description}</p>
+                </div>
+              </Link>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

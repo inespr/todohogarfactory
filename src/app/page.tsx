@@ -5,10 +5,10 @@ import Link from 'next/link';
 import { PRODUCTS, Product } from '../lib/products';
 
 function getFeaturedProducts(): Product[] {
-  const el = PRODUCTS.filter((p) => p.category === 'electrodomesticos').slice(0, 2);
-  const sf = PRODUCTS.filter((p) => p.category === 'sofas').slice(0, 2);
-  const hg = PRODUCTS.filter((p) => p.category === 'hogar').slice(0, 2);
-  const ds = PRODUCTS.filter((p) => p.category === 'descanso').slice(0, 2);
+  const el = PRODUCTS.filter((p) => p.category === 'electrodomesticos').slice(0, 1);
+  const sf = PRODUCTS.filter((p) => p.category === 'sofas').slice(0, 1);
+  const hg = PRODUCTS.filter((p) => p.category === 'hogar').slice(0, 1);
+  const ds = PRODUCTS.filter((p) => p.category === 'descanso').slice(0, 1);
   return [...el, ...sf, ...hg, ...ds];
 }
 
@@ -61,12 +61,12 @@ export default function Home() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
+          <div className="flex flex-wrap gap-8 justify-center">
             {featuredProducts.map((product) => (
               <Link
                 key={product.id}
                 href={getCategoryHref(product.category)}
-                className="group h-full min-h-[420px] flex flex-col rounded-2xl border border-black/[.08] bg-white overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                className="group w-64 h-[420px] flex-shrink-0 flex flex-col rounded-2xl border border-black/[.08] bg-white overflow-hidden shadow-sm hover:shadow-md transition-shadow"
               >
                 <div className="relative aspect-[4/3] bg-neutral-50">
                   <Image

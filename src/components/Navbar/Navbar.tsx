@@ -21,23 +21,23 @@ export function Navbar() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openMobileCategory, setOpenMobileCategory] = useState<string | null>(null);
-   const [suggestions, setSuggestions] = useState<Product[]>([]);
-   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [suggestions, setSuggestions] = useState<Product[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const pathname = usePathname();
 
   const categories = [
-    { 
-      label: 'Electrodomésticos', 
+    {
+      label: 'Electrodomésticos',
       url: '/electrodomesticos',
       category: 'electrodomesticos' as ProductCategory
     },
-    { 
-      label: 'Sofás', 
+    {
+      label: 'Sofás',
       url: '/sofas',
       category: 'sofas' as ProductCategory
     },
-    { 
-      label: 'Hogar', 
+    {
+      label: 'Hogar',
       url: '/hogar',
       category: 'hogar' as ProductCategory
     },
@@ -150,7 +150,7 @@ export function Navbar() {
   );
 
   return (
-    <header className={styles.header}>
+    <header className={`${styles.header} fixed top-0 left-0 right-0 z-50`}>
       <nav className={styles.navbar}>
         <button
           type="button"
@@ -172,12 +172,12 @@ export function Navbar() {
                 className={styles.dropdown}
                 onMouseEnter={() => handleMouseEnter(item.category)}
               >
-                <Link href={item.url} className={styles.menuItem}>
+                <Link href={item.url} className={`${styles.menuItem} ${pathname === item.url ? styles.active : ''}`}>
                   {item.label}
-                  {subcategories.length > 0 && (
-                    <i className="pi pi-chevron-down" style={{ fontSize: '0.7rem', marginLeft: '0.3rem' }} />
-                  )}
                 </Link>
+                {subcategories.length > 0 && (
+                  <i className="pi pi-chevron-down" style={{ fontSize: '0.7rem', marginLeft: '0.3rem' }} />
+                )}
                 {openDropdown === item.category && subcategories.length > 0 && (
                   <div className={styles.dropdownContent} onMouseEnter={() => handleMouseEnter(item.category)}>
                     {subcategories.map((subcat) => (
@@ -194,10 +194,10 @@ export function Navbar() {
               </div>
             );
           })}
-          <Link href="/ofertas" className={styles.menuItemOferta}>
+          <Link href="/ofertas" className={`${styles.menuItemOferta} ${pathname === '/ofertas' ? styles.active : ''}`}>
             Ofertas
           </Link>
-          <Link href="/contacto" className={styles.menuItem}>
+          <Link href="/contacto" className={`${styles.menuItem} ${pathname === '/contacto' ? styles.active : ''}`}>
             Contacto
           </Link>
         </div>

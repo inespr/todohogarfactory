@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getProductById, SUBCATEGORY_NAMES } from "@/lib/products";
+import { ShareProductButton } from "@/components/ShareProductButton";
 
 interface ProductPageProps {
   params: { id: string };
@@ -30,8 +31,8 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
     product.category === "electrodomesticos"
       ? "Electrodomésticos"
       : product.category === "sofas"
-      ? "Sofás"
-      : "Hogar";
+        ? "Sofás"
+        : "Hogar";
 
   const readableSubcategory = product.subcategory
     ? SUBCATEGORY_NAMES[product.subcategory] ?? product.subcategory
@@ -39,6 +40,22 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-10">
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <nav className="flex flex-wrap items-center gap-2 text-sm text-neutral-600">
+          <Link href="/" className="hover:underline">
+            Inicio
+          </Link>
+          <span aria-hidden="true">›</span>
+          <Link href="/productos" className="hover:underline">
+            Productos
+          </Link>
+          <span aria-hidden="true">›</span>
+          <span className="font-medium text-neutral-900">{product.name}</span>
+        </nav>
+
+        <ShareProductButton title={product.name} description={product.description} />
+      </div>
+
       <Link
         href="/productos"
         className="inline-flex items-center text-sm text-neutral-600 hover:text-neutral-900 mb-6"

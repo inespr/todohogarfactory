@@ -2,11 +2,6 @@
 
 import { useState } from 'react';
 import { ContactForm, InfoTienda } from './ContactForm';
-import { Card } from 'primereact/card';
-import { Button } from 'primereact/button';
-import 'primereact/resources/themes/lara-light-indigo/theme.css';
-import 'primereact/resources/primereact.min.css';
-import 'primeicons/primeicons.css';
 
 export default function ContactoPage() {
   const telefono = "692211145";
@@ -19,42 +14,39 @@ export default function ContactoPage() {
     setSuccessMessage(message);
   };
 
-  const handleReset = () => {
-    setIsSuccess(false);
-    setSuccessMessage(null);
-  };
-
   return (
-    <div className="max-w-6xl mx-auto px-4 py-10">
-      <h1 className="text-3xl font-bold mb-8 text-center">Contacto</h1>
+    <div className="max-w-5xl mx-auto px-4 py-10">
+      <h1 className="text-3xl font-bold mb-2 text-center">Contacto</h1>
+      <p className="text-center opacity-70 mb-10 text-sm">
+        Estamos en Valverde del Camino. Escríbenos o llámanos sin compromiso.
+      </p>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2">
-        <div className="pb-8 lg:pb-0 lg:pr-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+        {/* Info tienda */}
+        <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-6">
+          <h2 className="text-lg font-semibold mb-4">Dónde encontrarnos</h2>
           <InfoTienda telefono={telefono} whatsapp={whatsapp} />
         </div>
 
-        <div className="pt-8 border-t border-black/10 lg:pt-0 lg:pl-8 lg:border-t-0 lg:border-l lg:border-black/10">
+        {/* Formulario */}
+        <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-6">
           {isSuccess ? (
-            <Card className="shadow-lg">
-              <div className="text-center py-8">
-                <div className="flex justify-center mb-4">
-                  <i className="pi pi-check-circle text-6xl text-green-500"></i>
-                </div>
-                <h3 className="text-xl font-semibold text-green-600 mb-2">¡Mensaje enviado!</h3>
-                <p className="text-green-600 mb-6">{successMessage}</p>
-                <Button
-                  type="button"
-                  label="Enviar otro mensaje"
-                  icon="pi pi-refresh"
-                  className="p-button-rounded p-button-outlined p-button-success"
-                  onClick={handleReset}
-                />
-              </div>
-            </Card>
+            <div className="flex flex-col items-center justify-center h-full py-10 text-center">
+              <div className="text-5xl mb-4">✅</div>
+              <h3 className="text-xl font-semibold text-green-600 mb-2">¡Mensaje enviado!</h3>
+              <p className="text-sm text-neutral-600 mb-6">{successMessage}</p>
+              <button
+                onClick={() => { setIsSuccess(false); setSuccessMessage(null); }}
+                className="px-5 py-2 rounded-lg border border-neutral-200 text-sm font-medium hover:bg-neutral-50 transition"
+              >
+                Enviar otro mensaje
+              </button>
+            </div>
           ) : (
-            <Card className="shadow-lg" title="Escríbenos">
+            <>
+              <h2 className="text-lg font-semibold mb-4">Escríbenos</h2>
               <ContactForm onSuccess={handleFormSuccess} />
-            </Card>
+            </>
           )}
         </div>
       </div>

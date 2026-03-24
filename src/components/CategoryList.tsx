@@ -5,7 +5,18 @@ import { PRODUCTS } from '@/lib/products';
 import Image from 'next/image';
 import Link from 'next/link';
 
-function ProductImage({ src, alt }: { src: string; alt: string }) {
+type CategoryItem = {
+  id: string;
+  name: string;
+  description: string;
+  price?: number;
+  stock?: boolean;
+  category: string;
+  urlImg?: string;
+  hasDefect?: boolean;
+};
+
+function ProductImage({ src, alt, placeholder }: { src: string; alt: string; placeholder: string }) {
   const [imgError, setImgError] = useState(false);
   const [imgSrc, setImgSrc] = useState(src);
 
@@ -13,7 +24,7 @@ function ProductImage({ src, alt }: { src: string; alt: string }) {
 
   return (
     <Image
-      src={imgError ? '/placeholders/electrodomesticos.svg' : imgSrc}
+      src={imgError ? placeholder : imgSrc}
       alt={alt}
       fill
       className="object-contain p-3"
@@ -24,67 +35,61 @@ function ProductImage({ src, alt }: { src: string; alt: string }) {
   );
 }
 
-// Mapeo de subcategorías a nombres legibles
-const SUBCATEGORY_NAMES: Record<string, string> = {
-  'lavadora': 'Lavadoras',
-  'secadora': 'Secadoras',
-  'frigorifico-combi': 'Frigóríficos',
-  'arcon-congelador': 'Arcones Congeladores',
-  'placa-induccion': 'Placas de Inducción',
-  'placa-gas': 'Placas de Gas',
-  'microondas': 'Microondas',
-  'lavavajillas': 'Lavavajillas',
-};
+interface CategoryListProps {
+  collection: string;
+  placeholder: string;
+  detailBase: string;
+}
 
-type Product = {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  subcategory?: string;
-};
-
-export function ElectroList() {
-  const [items, setItems] = useState<Product[]>([]);
-  const [filteredItems, setFilteredItems] = useState<Product[]>([]);
-  const [subcategories, setSubcategories] = useState<string[]>([]);
-  const [selectedSubcategory, setSelectedSubcategory] = useState<string>('Todos');
+export function CategoryList({ collection: collectionName, placeholder, detailBase }: CategoryListProps) {
+  const [items, setItems] = useState<CategoryItem[]>([]);
+  const [filteredItems, setFilteredItems] = useState<CategoryItem[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('Todos');
   const [sortBy, setSortBy] = useState<string>('default');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Filtrar productos de electrodomésticos de la base de datos estática
-    const electroProducts = PRODUCTS.filter((p) => p.category === 'electrodomesticos');
-    setItems(electroProducts);
-    setFilteredItems(electroProducts);
+    // Filtrar productos estáticos por categoría
+    const data: CategoryItem[] = PRODUCTS
+      .filter((p) => p.category === collectionName)
+      .map((p) => ({
+        id: p.id,
+        name: p.name,
+        description: p.description,
+        category: p.category,
+        price: 0,
+        stock: true,
+      }));
 
-    // Extraer subcategorías únicas
-    const seen = new Set<string>();
-    const subs: string[] = [];
-    electroProducts.forEach((p) => {
-      if (p.subcategory && !seen.has(p.subcategory)) {
-        seen.add(p.subcategory);
-        subs.push(p.subcategory);
-      }
+    setItems(data);
+    setFilteredItems(data);
+
+    const seen = new Map<string, string>();
+    data.forEach((p) => {
+      const raw = (p.category || 'Sin categoría').trim();
+      if (!seen.has(raw.toLowerCase())) seen.set(raw.toLowerCase(), raw);
     });
-    setSubcategories(['Todos', ...subs]);
+    setCategories(['Todos', ...Array.from(seen.values())]);
     setLoading(false);
-  }, []);
+  }, [collectionName]);
 
   useEffect(() => {
     let updated = [...items];
-    if (selectedSubcategory !== 'Todos') {
-      updated = updated.filter((p) => p.subcategory === selectedSubcategory);
+    if (selectedCategory !== 'Todos') {
+      if (selectedCategory === 'Ocasión') updated = updated.filter((p) => p.hasDefect);
+      else updated = updated.filter((p) => (p.category || '').trim().toLowerCase() === selectedCategory.toLowerCase());
     }
-    if (sortBy === 'name-asc') updated.sort((a, b) => a.name.localeCompare(b.name));
+    if (sortBy === 'price-asc') updated.sort((a, b) => a.price - b.price);
+    else if (sortBy === 'price-desc') updated.sort((a, b) => b.price - a.price);
+    else if (sortBy === 'name-asc') updated.sort((a, b) => a.name.localeCompare(b.name));
     else if (sortBy === 'name-desc') updated.sort((a, b) => b.name.localeCompare(a.name));
     setFilteredItems(updated);
-  }, [selectedSubcategory, sortBy, items]);
+  }, [selectedCategory, sortBy, items]);
 
-  // Cuenta productos por subcategoría
-  const countFor = (subcat: string) => {
-    if (subcat === 'Todos') return items.length;
-    return items.filter((p) => p.subcategory === subcat).length;
+  const countFor = (cat: string) => {
+    if (cat === 'Todos') return items.length;
+    return items.filter((p) => (p.category || '').trim().toLowerCase() === cat.toLowerCase()).length;
   };
 
   if (loading) return <p className="opacity-70 py-10 text-center">Cargando productos…</p>;
@@ -93,25 +98,24 @@ export function ElectroList() {
     <div className="flex gap-6 items-start">
 
       {/* Sidebar */}
-      <aside className="hidden lg:flex flex-col w-56 shrink-0 sticky top-24 bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden">
+      <aside className="hidden lg:flex flex-col w-52 shrink-0 sticky top-24 bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden">
         <div className="px-4 py-3 border-b border-neutral-100">
-          <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Filtrar</span>
+          <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Categorías</span>
         </div>
         <ul className="py-2">
-          {subcategories.map((subcat) => {
-            const count = countFor(subcat);
-            const active = selectedSubcategory === subcat;
-            const displayName = subcat === 'Todos' ? 'Todos' : SUBCATEGORY_NAMES[subcat] || subcat;
+          {categories.map((cat) => {
+            const count = countFor(cat);
+            const active = selectedCategory === cat;
             return (
-              <li key={subcat}>
+              <li key={cat}>
                 <button
-                  onClick={() => setSelectedSubcategory(subcat)}
+                  onClick={() => setSelectedCategory(cat)}
                   className={`w-full flex items-center justify-between px-4 py-2.5 text-sm transition-colors ${active
                       ? 'bg-orange-50 text-orange-700 font-semibold border-l-2 border-orange-500'
                       : 'text-neutral-700 hover:bg-neutral-50'
                     }`}
                 >
-                  <span>{displayName}</span>
+                  <span>{cat}</span>
                   <span className={`text-xs px-1.5 py-0.5 rounded-full ${active ? 'bg-orange-100 text-orange-600' : 'bg-neutral-100 text-neutral-500'}`}>
                     {count}
                   </span>
@@ -127,23 +131,20 @@ export function ElectroList() {
 
         {/* Barra superior: filtros móvil + sort + conteo */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-5 bg-white rounded-xl border border-neutral-200 px-4 py-3">
-          {/* Filtros subcategoría (solo móvil) */}
+          {/* Filtros categoría (solo móvil) */}
           <div className="flex lg:hidden flex-wrap gap-1.5">
-            {subcategories.map((subcat) => {
-              const displayName = subcat === 'Todos' ? 'Todos' : SUBCATEGORY_NAMES[subcat] || subcat;
-              return (
-                <button
-                  key={subcat}
-                  onClick={() => setSelectedSubcategory(subcat)}
-                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${selectedSubcategory === subcat
-                      ? 'bg-orange-100 text-orange-700 ring-1 ring-orange-400'
-                      : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-                    }`}
-                >
-                  {displayName}
-                </button>
-              );
-            })}
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${selectedCategory === cat
+                    ? 'bg-orange-100 text-orange-700 ring-1 ring-orange-400'
+                    : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                  }`}
+              >
+                {cat}
+              </button>
+            ))}
           </div>
 
           <p className="hidden lg:block text-sm text-neutral-500">
@@ -156,6 +157,8 @@ export function ElectroList() {
             className="ml-auto rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-orange-400"
           >
             <option value="default">Ordenar por…</option>
+            <option value="price-asc">Precio: menor a mayor</option>
+            <option value="price-desc">Precio: mayor a menor</option>
             <option value="name-asc">Nombre: A–Z</option>
             <option value="name-desc">Nombre: Z–A</option>
           </select>
@@ -169,27 +172,36 @@ export function ElectroList() {
             {filteredItems.map((p) => (
               <div key={p.id} style={{ height: '280px', minHeight: '280px', maxHeight: '280px' }}>
                 <Link
-                  href={`/electrodomesticos/${p.id}`}
+                  href={`${detailBase}/${p.id}`}
                   className="group flex flex-col bg-white rounded-2xl border border-neutral-200 overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all w-full"
                   style={{ height: '280px' }}
                 >
                   {/* Imagen */}
                   <div className="relative bg-neutral-50 shrink-0" style={{ height: '160px', minHeight: '160px' }}>
-                    <Image
-                      src="/placeholders/electrodomesticos.svg"
-                      alt={p.name}
-                      fill
-                      className="object-contain p-3"
-                      sizes="25vw"
-                    />
+                    {p.urlImg ? (
+                      <ProductImage src={p.urlImg} alt={p.name} placeholder={placeholder} />
+                    ) : (
+                      <Image
+                        src={placeholder}
+                        alt={p.name}
+                        fill
+                        className="object-contain p-3"
+                        sizes="25vw"
+                      />
+                    )}
+                    {!p.stock && (
+                      <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
+                        <span className="text-xs font-semibold text-red-500 bg-white px-2 py-1 rounded-full shadow-sm border border-red-100">
+                          Agotado
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Info */}
                   <div className="p-3 flex flex-col justify-between flex-1 overflow-hidden">
                     <div>
-                      <p className="text-[10px] text-neutral-400 uppercase tracking-wide truncate">
-                        {p.subcategory ? SUBCATEGORY_NAMES[p.subcategory] || p.subcategory : 'Sin categoría'}
-                      </p>
+                      <p className="text-[10px] text-neutral-400 uppercase tracking-wide truncate">{p.category}</p>
                       <h3 className="mt-0.5 text-sm font-semibold text-neutral-900 group-hover:text-orange-600 transition-colors line-clamp-2 leading-snug">
                         {p.name}
                       </h3>
