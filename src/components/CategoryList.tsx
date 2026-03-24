@@ -111,8 +111,8 @@ export function CategoryList({ collection: collectionName, placeholder, detailBa
                 <button
                   onClick={() => setSelectedCategory(cat)}
                   className={`w-full flex items-center justify-between px-4 py-2.5 text-sm transition-colors ${active
-                      ? 'bg-orange-50 text-orange-700 font-semibold border-l-2 border-orange-500'
-                      : 'text-neutral-700 hover:bg-neutral-50'
+                    ? 'bg-orange-50 text-orange-700 font-semibold border-l-2 border-orange-500'
+                    : 'text-neutral-700 hover:bg-neutral-50'
                     }`}
                 >
                   <span>{cat}</span>
@@ -138,8 +138,8 @@ export function CategoryList({ collection: collectionName, placeholder, detailBa
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
                 className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${selectedCategory === cat
-                    ? 'bg-orange-100 text-orange-700 ring-1 ring-orange-400'
-                    : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                  ? 'bg-orange-100 text-orange-700 ring-1 ring-orange-400'
+                  : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
                   }`}
               >
                 {cat}
