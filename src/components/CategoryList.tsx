@@ -1,39 +1,24 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { PRODUCTS } from '@/lib/products';
+import { useSearchParams } from 'next/navigation';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { SUBCATEGORY_NAMES } from '@/lib/products';
 import Image from 'next/image';
 import Link from 'next/link';
 
 type CategoryItem = {
   id: string;
   name: string;
-  description: string;
+  observaciones: string;
   price?: number;
-  stock?: boolean;
+  stock?: number;
   category: string;
-  urlImg?: string;
+  fotos: string[];
   hasDefect?: boolean;
 };
 
-function ProductImage({ src, alt, placeholder }: { src: string; alt: string; placeholder: string }) {
-  const [imgError, setImgError] = useState(false);
-  const [imgSrc, setImgSrc] = useState(src);
-
-  useEffect(() => { setImgSrc(src); setImgError(false); }, [src]);
-
-  return (
-    <Image
-      src={imgError ? placeholder : imgSrc}
-      alt={alt}
-      fill
-      className="object-contain p-3"
-      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-      unoptimized
-      onError={() => setImgError(true)}
-    />
-  );
-}
 
 interface CategoryListProps {
   collection: string;
@@ -42,6 +27,9 @@ interface CategoryListProps {
 }
 
 export function CategoryList({ collection: collectionName, placeholder, detailBase }: CategoryListProps) {
+  const searchParams = useSearchParams();
+  const subcategoryParam = searchParams.get('subcategory') || '';
+
   const [items, setItems] = useState<CategoryItem[]>([]);
   const [filteredItems, setFilteredItems] = useState<CategoryItem[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
@@ -49,29 +37,62 @@ export function CategoryList({ collection: collectionName, placeholder, detailBa
   const [sortBy, setSortBy] = useState<string>('default');
   const [loading, setLoading] = useState(true);
 
+  const normalizeSubcategorySlug = (slug: string) => {
+    const candidate = SUBCATEGORY_NAMES[slug.toLowerCase()];
+    if (candidate) return candidate;
+    const decoded = decodeURIComponent(slug || '').replace(/-/g, ' ');
+    return decoded
+      .trim()
+      .split(' ')
+      .filter(Boolean)
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
   useEffect(() => {
-    // Filtrar productos estáticos por categoría
-    const data: CategoryItem[] = PRODUCTS
-      .filter((p) => p.category === collectionName)
-      .map((p) => ({
-        id: p.id,
-        name: p.name,
-        description: p.description,
-        category: p.category,
-        price: 0,
-        stock: true,
-      }));
+    if (!subcategoryParam) {
+      setSelectedCategory('Todos');
+      return;
+    }
 
-    setItems(data);
-    setFilteredItems(data);
+    const normalized = normalizeSubcategorySlug(subcategoryParam);
+    setSelectedCategory(normalized);
+  }, [subcategoryParam]);
 
-    const seen = new Map<string, string>();
-    data.forEach((p) => {
-      const raw = (p.category || 'Sin categoría').trim();
-      if (!seen.has(raw.toLowerCase())) seen.set(raw.toLowerCase(), raw);
-    });
-    setCategories(['Todos', ...Array.from(seen.values())]);
-    setLoading(false);
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const snap = await getDocs(collection(db, collectionName));
+        const data: CategoryItem[] = snap.docs.map((d) => {
+          const raw = d.data() as Record<string, unknown>;
+          return {
+            id: d.id,
+            name: raw.name as string,
+            observaciones: raw.observaciones as string || '',
+            price: raw.price as number | undefined,
+            stock: raw.stock as number | undefined,
+            category: raw.category as string || collectionName,
+            fotos: (raw.fotos as string[]) || [],
+            hasDefect: raw.hasDefect as boolean | undefined,
+          };
+        });
+
+        setItems(data);
+        setFilteredItems(data);
+
+        const seen = new Map<string, string>();
+        data.forEach((p) => {
+          const raw = (p.category || 'Sin categoría').trim();
+          if (!seen.has(raw.toLowerCase())) seen.set(raw.toLowerCase(), raw);
+        });
+        setCategories(['Todos', ...Array.from(seen.values())]);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
   }, [collectionName]);
 
   useEffect(() => {
@@ -178,18 +199,16 @@ export function CategoryList({ collection: collectionName, placeholder, detailBa
                 >
                   {/* Imagen */}
                   <div className="relative bg-neutral-50 shrink-0" style={{ height: '160px', minHeight: '160px' }}>
-                    {p.urlImg ? (
-                      <ProductImage src={p.urlImg} alt={p.name} placeholder={placeholder} />
-                    ) : (
-                      <Image
-                        src={placeholder}
-                        alt={p.name}
-                        fill
-                        className="object-contain p-3"
-                        sizes="25vw"
-                      />
-                    )}
-                    {!p.stock && (
+                    <Image
+                      src={p.fotos[0] || placeholder}
+                      alt={p.name}
+                      fill
+                      className="object-contain p-3"
+                      sizes="25vw"
+                      unoptimized
+                      onError={(e) => { (e.target as HTMLImageElement).src = placeholder; }}
+                    />
+                    {p.stock === 0 && (
                       <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
                         <span className="text-xs font-semibold text-red-500 bg-white px-2 py-1 rounded-full shadow-sm border border-red-100">
                           Agotado
@@ -205,8 +224,13 @@ export function CategoryList({ collection: collectionName, placeholder, detailBa
                       <h3 className="mt-0.5 text-sm font-semibold text-neutral-900 group-hover:text-orange-600 transition-colors line-clamp-2 leading-snug">
                         {p.name}
                       </h3>
-                      <p className="text-xs text-neutral-600 mt-1 line-clamp-1">{p.description}</p>
+                      <p className="text-xs text-neutral-600 mt-1 line-clamp-1">{p.observaciones}</p>
                     </div>
+                    {p.price != null && p.price > 0 && (
+                      <p className="text-sm font-bold text-neutral-900 mt-1">
+                        {p.price.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
+                      </p>
+                    )}
                   </div>
                 </Link>
               </div>

@@ -8,12 +8,13 @@ import { InputIcon } from 'primereact/inputicon';
 import styles from './Navbar.module.css';
 import Link from 'next/link';
 import {
-  getSubcategoriesByCategory,
   SUBCATEGORY_NAMES,
   type Product,
   type ProductCategory,
   searchProducts,
 } from '../../lib/products';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db } from '../../lib/firebase';
 import { usePathname } from 'next/navigation';
 
 export function Navbar() {
@@ -23,7 +24,61 @@ export function Navbar() {
   const [openMobileCategory, setOpenMobileCategory] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<Product[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [subcategoriesMap, setSubcategoriesMap] = useState<Record<string, string[]>>({});
   const pathname = usePathname();
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, 'catalogoSubcategorias'), (snap) => {
+      const map: Record<string, Set<string>> = {
+        electrodomesticos: new Set(),
+        sofas: new Set(),
+        hogar: new Set(),
+        descanso: new Set(),
+      };
+
+      snap.docs.forEach((doc) => {
+        const data = doc.data() as Record<string, unknown>;
+        const rawCategory = ((data.categoria as string) || '').trim().toLowerCase();
+        const rawName = ((data.nombre as string) || '').trim();
+        if (!rawCategory || !rawName) return;
+
+        const normalizedCategory = rawCategory
+          .replace('á', 'a')
+          .replace('é', 'e')
+          .replace('í', 'i')
+          .replace('ó', 'o')
+          .replace('ú', 'u')
+          .replace(/ñ/g, 'n');
+
+        const mainCategory =
+          normalizedCategory.includes('electro') ? 'electrodomesticos' :
+            normalizedCategory.includes('sof') ? 'sofas' :
+              normalizedCategory.includes('hogar') ? 'hogar' :
+                normalizedCategory.includes('descanso') ? 'descanso' :
+                  null;
+
+        if (!mainCategory) return;
+
+        const subcategorySlug = rawName
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/\p{Diacritic}/gu, '')
+          .replace(/\s+/g, '-')
+          .replace(/[^a-z0-9-]/g, '');
+
+        if (subcategorySlug) map[mainCategory].add(subcategorySlug);
+      });
+
+      setSubcategoriesMap({
+        electrodomesticos: Array.from(map.electrodomesticos),
+        sofas: Array.from(map.sofas),
+        hogar: Array.from(map.hogar),
+        descanso: Array.from(map.descanso),
+      });
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const categories = [
     {
@@ -48,6 +103,12 @@ export function Navbar() {
     },
   ];
 
+  const categoryUrl = (url: string, subcategory = 'Todos') => {
+    if (!subcategory || subcategory === 'Todos') return `${url}`;
+    return `${url}?subcategory=${encodeURIComponent(subcategory)}`;
+  };
+
+
   const handleMouseEnter = (category: string) => {
     setOpenDropdown(category);
   };
@@ -57,7 +118,7 @@ export function Navbar() {
   };
 
   const getSubcategories = (category: ProductCategory) => {
-    return getSubcategoriesByCategory(category);
+    return subcategoriesMap[category] || [];
   };
 
   const closeMobileMenu = () => {
@@ -172,7 +233,7 @@ export function Navbar() {
                 className={styles.dropdown}
                 onMouseEnter={() => handleMouseEnter(item.category)}
               >
-                <Link href={item.url} className={`${styles.menuItem} ${pathname === item.url ? styles.active : ''}`}>
+                <Link href={categoryUrl(item.url, 'Todos')} className={`${styles.menuItem} ${pathname === item.url ? styles.active : ''}`}>
                   {item.label}
                 </Link>
                 {subcategories.length > 0 && (
@@ -183,10 +244,10 @@ export function Navbar() {
                     {subcategories.map((subcat) => (
                       <Link
                         key={subcat}
-                        href={`${item.url}?subcategory=${subcat}`}
+                        href={`${item.url}?subcategory=${encodeURIComponent(subcat.toLowerCase())}`}
                         className={styles.dropdownItem}
                       >
-                        {SUBCATEGORY_NAMES[subcat] || subcat}
+                        {SUBCATEGORY_NAMES[subcat.toLowerCase()] || subcat}
                       </Link>
                     ))}
                   </div>
@@ -265,7 +326,7 @@ export function Navbar() {
               <div key={item.url} className={styles.mobileCategory}>
                 <div className={styles.mobileCategoryRow}>
                   <Link
-                    href={item.url}
+                    href={categoryUrl(item.url, 'Todos')}
                     className={styles.mobileLink}
                     onClick={closeMobileMenu}
                     aria-current={pathname === item.url ? 'page' : undefined}
@@ -290,11 +351,11 @@ export function Navbar() {
                     {subcategories.map((subcat) => (
                       <Link
                         key={subcat}
-                        href={`${item.url}?subcategory=${subcat}`}
+                        href={`${item.url}?subcategory=${encodeURIComponent(subcat.toLowerCase())}`}
                         className={styles.mobileSublink}
                         onClick={closeMobileMenu}
                       >
-                        {SUBCATEGORY_NAMES[subcat] || subcat}
+                        {SUBCATEGORY_NAMES[subcat.toLowerCase()] || subcat}
                       </Link>
                     ))}
                   </div>

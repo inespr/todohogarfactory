@@ -3,14 +3,19 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
-      { 
-        protocol: "https", 
+      {
+        protocol: "https",
         hostname: "firebasestorage.googleapis.com",
         pathname: "/**",
       },
-      { 
-        protocol: "https", 
+      {
+        protocol: "https",
         hostname: "*.firebasestorage.app",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
         pathname: "/**",
       },
     ],

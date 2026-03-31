@@ -1,8 +1,8 @@
 export type ProductCategory = "electrodomesticos" | "sofas" | "hogar" | "descanso";
 
-export type ElectroSubcategory = "lavadora" | "secadora" | "frigorifico-combi" | "arcon-congelador" | "placa-induccion" | "placa-gas" | "microondas" | "lavavajillas";
-export type SofaSubcategory = "sofa-cama" | "chaise-longue" | "sillon" | "butaca" | "3+2";
-export type HogarSubcategory = "cafetera-italiana" | "cafetera" | "ollas" | "cubiertos" | "vasos" | "secador" | "ropa-cama" | "toallas";
+export type ElectroSubcategory = "lavadora" | "secadora" | "frigorifico-combi" | "arcon-congelador" | "placa-induccion" | "placa-gas" | "microondas" | "lavavajillas" | "horno" | "vitroceramica" | "campana-extractora" | "nevera" | "congelador" | "batidora" | "tostadora";
+export type SofaSubcategory = "sofa-cama" | "chaise-longue" | "sillon" | "butaca" | "3+2" | "sofa-individual" | "puff" | "reposapies";
+export type HogarSubcategory = "cafetera-italiana" | "cafetera" | "ollas" | "cubiertos" | "vasos" | "secador" | "ropa-cama" | "toallas" | "platos" | "tazas" | "manteles" | "cortinas" | "cojines";
 export type DescansoSubcategory =
   | "colchones"
   | "almohadas"
@@ -10,7 +10,10 @@ export type DescansoSubcategory =
   | "bases"
   | "somieres"
   | "protectores"
-  | "cabeceros";
+  | "cabeceros"
+  | "edredones"
+  | "sabanas"
+  | "mantas";
 
 export interface Product {
   id: string;
@@ -93,9 +96,62 @@ export function searchProducts(params: {
   });
 }
 
-export function getProductById(id: string): Product | undefined {
-  return PRODUCTS.find((p) => p.id === id);
-}
+export const SUBCATEGORIES_BY_CATEGORY: Record<ProductCategory, string[]> = {
+  electrodomesticos: [
+    "lavadora",
+    "secadora",
+    "frigorifico-combi",
+    "arcon-congelador",
+    "placa-induccion",
+    "placa-gas",
+    "microondas",
+    "lavavajillas",
+    "horno",
+    "vitroceramica",
+    "campana-extractora",
+    "nevera",
+    "congelador",
+    "batidora",
+    "tostadora",
+  ],
+  sofas: [
+    "sofa-cama",
+    "chaise-longue",
+    "sillon",
+    "butaca",
+    "3+2",
+    "sofa-individual",
+    "puff",
+    "reposapies",
+  ],
+  hogar: [
+    "cafetera-italiana",
+    "cafetera",
+    "ollas",
+    "cubiertos",
+    "vasos",
+    "secador",
+    "ropa-cama",
+    "toallas",
+    "platos",
+    "tazas",
+    "manteles",
+    "cortinas",
+    "cojines",
+  ],
+  descanso: [
+    "colchones",
+    "almohadas",
+    "canapes",
+    "bases",
+    "somieres",
+    "protectores",
+    "cabeceros",
+    "edredones",
+    "sabanas",
+    "mantas",
+  ],
+};
 
 // Mapeo de subcategorías a nombres legibles
 export const SUBCATEGORY_NAMES: Record<string, string> = {
@@ -108,12 +164,22 @@ export const SUBCATEGORY_NAMES: Record<string, string> = {
   "placa-gas": "Placa de Gas",
   "microondas": "Microondas",
   "lavavajillas": "Lavavajillas",
+  "horno": "Horno",
+  "vitroceramica": "Vitrocerámica",
+  "campana-extractora": "Campana Extractora",
+  "nevera": "Nevera",
+  "congelador": "Congelador",
+  "batidora": "Batidora",
+  "tostadora": "Tostadora",
   // Sofás
   "sofa-cama": "Sofá Cama",
   "chaise-longue": "Chaise Longue",
   "sillon": "Sillón",
   "butaca": "Butaca",
   "3+2": "Sofá 3+2",
+  "sofa-individual": "Sofá Individual",
+  "puff": "Puff",
+  "reposapies": "Reposapiés",
   // Hogar
   "cafetera-italiana": "Cafetera Italiana",
   "cafetera": "Cafetera",
@@ -123,6 +189,11 @@ export const SUBCATEGORY_NAMES: Record<string, string> = {
   "secador": "Secador",
   "ropa-cama": "Ropa de Cama",
   "toallas": "Toallas",
+  "platos": "Platos",
+  "tazas": "Tazas",
+  "manteles": "Manteles",
+  "cortinas": "Cortinas",
+  "cojines": "Cojines",
   // Descanso
   "colchones": "Colchones",
   "almohadas": "Almohadas",
@@ -131,6 +202,9 @@ export const SUBCATEGORY_NAMES: Record<string, string> = {
   "somieres": "Somieres",
   "protectores": "Protectores",
   "cabeceros": "Cabeceros",
+  "edredones": "Edredones",
+  "sabanas": "Sábanas",
+  "mantas": "Mantas",
 };
 
 
