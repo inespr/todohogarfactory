@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { collection, getDocs, orderBy, query, limit } from 'firebase/firestore';
 import { db } from '../lib/firebase';

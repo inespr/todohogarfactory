@@ -33,7 +33,6 @@ const CATEGORY_LABELS: Record<ProductCategory, string> = {
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const router = useRouter();
   const [product, setProduct] = useState<ProductData & { collectionName: ProductCategory } | null>(null);
   const [selectedImg, setSelectedImg] = useState(0);
   const [loading, setLoading] = useState(true);
