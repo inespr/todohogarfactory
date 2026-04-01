@@ -48,7 +48,7 @@ export default function RootLayout({
           {children}
         </main>
         <footer className="w-full border-t border-black/[.08] dark:border-white/[.145] mt-12">
-          <div className="max-w-6xl mx-auto px-4 py-6 text-sm flex flex-col sm:flex-row items-center justify-between gap-2">
+          <div className="max-w-7xl mx-auto px-4 py-6 text-sm flex flex-col sm:flex-row items-center justify-between gap-2">
             <p>© {new Date().getFullYear()} Todo Hogar Factory</p>
             <p className="opacity-70">Calidad en electrodomésticos, sofás y artículos para el hogar</p>
           </div>

@@ -13,6 +13,7 @@ type CategoryItem = {
   name: string;
   observaciones: string;
   price?: number;
+  offerPrice?: number;
   stock?: number;
   category: string;
   subcategoria?: string;
@@ -74,6 +75,7 @@ export function CategoryList({ collection: collectionName, placeholder, detailBa
             name: raw.name as string,
             observaciones: raw.observaciones as string || '',
             price: raw.price as number | undefined,
+            offerPrice: raw.offerPrice as number | undefined,
             stock: raw.stock as number | undefined,
             category: raw.category as string || collectionName,
             subcategoria: raw.subcategoria as string || '',
@@ -204,11 +206,11 @@ export function CategoryList({ collection: collectionName, placeholder, detailBa
               <Link
                 key={p.id}
                 href={`${detailBase}/${p.id}`}
-                className="group flex flex-row bg-white rounded-2xl border border-neutral-200 overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
+                className="group flex flex-row bg-white rounded-xl border border-neutral-200 overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
                 style={{ height: '160px' }}
               >
                 {/* Imagen */}
-                <div className="relative bg-neutral-50 shrink-0" style={{ width: '150px', minWidth: '150px' }}>
+                <div className="relative bg-neutral-50 shrink-0 overflow-hidden" style={{ width: '150px', minWidth: '150px' }}>
                   <Image
                     src={p.fotos[0] || placeholder}
                     alt={p.name}
@@ -218,6 +220,11 @@ export function CategoryList({ collection: collectionName, placeholder, detailBa
                     unoptimized
                     onError={(e) => { (e.target as HTMLImageElement).src = placeholder; }}
                   />
+                  {p.offerPrice && p.price && p.offerPrice < p.price && (
+                    <div className="absolute top-2 left-2 text-white text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: '#f97316' }}>
+                      -{Math.round(((p.price - p.offerPrice) / p.price) * 100)}%
+                    </div>
+                  )}
                   {p.stock === 0 && (
                     <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
                       <span className="text-xs font-semibold text-red-500 bg-white px-2 py-1 rounded-full shadow-sm border border-red-100">
@@ -236,11 +243,27 @@ export function CategoryList({ collection: collectionName, placeholder, detailBa
                     </h3>
                     <p className="text-xs text-neutral-600 mt-1 line-clamp-2">{p.observaciones}</p>
                   </div>
-                  {p.price != null && p.price > 0 && (
-                    <p className="text-sm font-bold text-neutral-900 mt-1">
-                      {p.price.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
-                    </p>
-                  )}
+                   {(p.price ?? 0) > 0 && (
+                      <div className="mt-1 flex flex-col">
+                        {p.offerPrice && p.offerPrice < (p.price ?? 0) ? (
+                          <>
+                            {/* Precio oferta grande */}
+                            <span className="text-base font-bold text-red-600 leading-none">
+                              {p.offerPrice.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
+                            </span>
+
+                            {/* Precio original tachado */}
+                            <span className="text-xs text-neutral-400 line-through">
+                              Antes: {(p.price ?? 0).toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-sm font-bold text-neutral-900">
+                            {(p.price ?? 0).toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
+                          </span>
+                        )}
+                      </div>
+                    )}
                 </div>
               </Link>
             ))}

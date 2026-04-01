@@ -28,6 +28,7 @@ type Producto = {
   name: string;
   observaciones: string;
   price: number;
+  offerPrice?: number;
   fotos: string[];
   category: string;
   subcategoria?: string;
@@ -58,6 +59,7 @@ export default function ProductosPage() {
                 name: raw.name as string,
                 observaciones: (raw.observaciones as string) || (raw.description as string) || '',
                 price: (raw.price as number) ?? 0,
+                offerPrice: raw.offerPrice as number | undefined,
                 fotos,
                 category: (raw.category as string) || '',
                 subcategoria: (raw.subcategoria as string) || '',
@@ -80,10 +82,10 @@ export default function ProductosPage() {
 
   const filtered = selectedCol === 'todos' ? products : products.filter(p => p.coleccion === selectedCol);
 
-  if (loading) return <div className="max-w-5xl mx-auto px-4 py-10 opacity-70">Cargando productos…</div>;
+  if (loading) return <div className="max-w-6xl mx-auto px-4 py-10 opacity-70">Cargando productos…</div>;
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
+    <div className="max-w-6xl mx-auto px-4 py-8">
       <div className="mb-6">
         <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Todos los productos</h1>
         <p className="mt-1 text-sm text-neutral-500">{products.length} productos en catálogo</p>
@@ -120,11 +122,11 @@ export default function ProductosPage() {
             <Link
               key={`${p.coleccion}-${p.id}`}
               href={`/${p.coleccion}/${p.id}`}
-              className="group flex flex-row bg-white rounded-2xl border border-neutral-200 overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
+              className="group flex flex-row bg-white rounded-xl border border-neutral-200 overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
               style={{ height: '160px' }}
             >
               {/* Imagen */}
-              <div className="relative bg-neutral-50 shrink-0" style={{ width: '150px', minWidth: '150px' }}>
+              <div className="relative bg-neutral-50 shrink-0 overflow-hidden" style={{ width: '150px', minWidth: '150px' }}>
                 <Image
                   src={p.fotos[0] || PLACEHOLDER[p.coleccion]}
                   alt={p.name}
@@ -134,6 +136,11 @@ export default function ProductosPage() {
                   unoptimized
                   onError={(e) => { (e.target as HTMLImageElement).src = PLACEHOLDER[p.coleccion]; }}
                 />
+                {p.offerPrice && p.offerPrice < p.price && (
+                  <div className="absolute top-2 left-2 text-white text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: '#f97316' }}>
+                    -{Math.round(((p.price - p.offerPrice) / p.price) * 100)}%
+                  </div>
+                )}
                 {p.stock === 0 && (
                   <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
                     <span className="text-xs font-semibold text-red-500 bg-white px-2 py-1 rounded-full shadow-sm border border-red-100">
@@ -146,7 +153,6 @@ export default function ProductosPage() {
               {/* Info */}
               <div className="p-3 flex flex-col justify-between flex-1 overflow-hidden">
                 <div>
-                  {/* Etiquetas */}
                   <div className="flex flex-wrap gap-1 mb-1">
                     <span className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500 bg-neutral-100 px-2 py-0.5 rounded-full">
                       {COLECCION_LABEL[p.coleccion]}
@@ -165,9 +171,22 @@ export default function ProductosPage() {
                   )}
                 </div>
                 {p.price > 0 && (
-                  <p className="text-sm font-bold text-neutral-900">
-                    {p.price.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
-                  </p>
+                  <div className="mt-1 flex flex-col">
+                    {p.offerPrice && p.offerPrice < p.price ? (
+                      <>
+                        <span className="text-base font-bold text-red-600 leading-none">
+                          {p.offerPrice % 1 === 0 ? `${p.offerPrice} €` : p.offerPrice.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'}
+                        </span>
+                        <span className="text-xs text-neutral-400 line-through">
+                          {p.price % 1 === 0 ? `${p.price} €` : p.price.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-sm font-bold text-neutral-900">
+                        {p.price % 1 === 0 ? `${p.price} €` : p.price.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'}
+                      </span>
+                    )}
+                  </div>
                 )}
               </div>
             </Link>

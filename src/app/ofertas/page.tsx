@@ -28,6 +28,7 @@ type OfertaProduct = {
   name: string;
   observaciones: string;
   price: number;
+  offerPrice?: number;
   fotos: string[];
   category: string;
   subcategoria?: string;
@@ -58,6 +59,7 @@ export default function OfertasPage() {
                 name: raw.name as string,
                 observaciones: (raw.observaciones as string) || (raw.description as string) || '',
                 price: (raw.price as number) ?? 0,
+                offerPrice: raw.offerPrice as number | undefined,
                 fotos,
                 category: (raw.category as string) || '',
                 subcategoria: (raw.subcategoria as string) || '',
@@ -78,12 +80,19 @@ export default function OfertasPage() {
     fetchOfertas();
   }, []);
 
-  if (loading) return <div className="max-w-5xl mx-auto px-4 py-10 opacity-70">Cargando ofertas…</div>;
+  if (loading) return <div className="max-w-6xl mx-auto px-4 py-10 opacity-70">Cargando ofertas…</div>;
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      {/* Breadcrumb */}
+      <nav className="flex flex-wrap items-center gap-1.5 text-sm text-neutral-400 mb-6">
+        <Link href="/" className="hover:text-neutral-700 transition-colors">Inicio</Link>
+        <span>›</span>
+        <span className="text-neutral-700 font-medium">Ofertas</span>
+      </nav>
+
       <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Ofertas</h1>
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900">Ofertas</h1>
         <p className="mt-1 text-sm text-neutral-500">Productos seleccionados a precio especial.</p>
       </div>
 
@@ -91,66 +100,89 @@ export default function OfertasPage() {
         <p className="text-center opacity-70 py-16">No hay productos en oferta en este momento.</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {products.map((p) => (
-            <Link
-              key={`${p.coleccion}-${p.id}`}
-              href={`/${p.coleccion}/${p.id}`}
-              className="group flex flex-row bg-white rounded-2xl border border-neutral-200 overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
-              style={{ height: '160px' }}
-            >
-              {/* Imagen */}
-              <div className="relative bg-neutral-50 shrink-0" style={{ width: '150px', minWidth: '150px' }}>
-                <Image
-                  src={p.fotos[0] || PLACEHOLDER[p.coleccion]}
-                  alt={p.name}
-                  fill
-                  className="object-contain p-3"
-                  sizes="150px"
-                  unoptimized
-                  onError={(e) => { (e.target as HTMLImageElement).src = PLACEHOLDER[p.coleccion]; }}
-                />
-                {/* Badge Oferta */}
-                <div className="absolute top-2 left-2">
-                  <span className="inline-flex items-center rounded-full bg-red-600 text-white px-2 py-0.5 text-[10px] font-bold shadow-sm">
-                    Oferta
-                  </span>
-                </div>
-              </div>
+          {products.map((p) => {
+            const precioFormateado = p.price > 0
+              ? (p.price % 1 === 0 ? `${p.price} €` : p.price.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €')
+              : null;
+            const ofertaFormateado = p.offerPrice
+              ? (p.offerPrice % 1 === 0 ? `${p.offerPrice} €` : p.offerPrice.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €')
+              : null;
+            const descuento = p.offerPrice && p.price > 0 && p.offerPrice < p.price
+              ? Math.round(((p.price - p.offerPrice) / p.price) * 100)
+              : null;
 
-              {/* Info */}
-              <div className="p-3 flex flex-col justify-between flex-1 overflow-hidden">
-                <div>
-                  {/* Etiquetas */}
-                  <div className="flex flex-wrap gap-1 mb-1">
-                    <span className="text-[10px] font-semibold uppercase tracking-wide text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">
-                      {COLECCION_LABEL[p.coleccion]}
-                    </span>
-                    {(p.subcategoria || p.category) && p.subcategoria !== p.category && (
-                      <span className="text-[10px] text-neutral-500 bg-neutral-100 px-2 py-0.5 rounded-full">
-                        {p.subcategoria || p.category}
-                      </span>
-                    )}
-                    {p.stock === 0 && (
-                      <span className="text-[10px] text-red-600 bg-red-50 px-2 py-0.5 rounded-full font-medium">
+            return (
+              <Link
+                key={`${p.coleccion}-${p.id}`}
+                href={`/${p.coleccion}/${p.id}`}
+                className="group flex flex-row bg-white rounded-xl border border-neutral-200 overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
+                style={{ height: '160px' }}
+              >
+                {/* Imagen */}
+                <div className="relative bg-neutral-50 shrink-0 overflow-hidden" style={{ width: '150px', minWidth: '150px' }}>
+                  <Image
+                    src={p.fotos[0] || PLACEHOLDER[p.coleccion]}
+                    alt={p.name}
+                    fill
+                    className="object-contain p-3"
+                    sizes="150px"
+                    unoptimized
+                    onError={(e) => { (e.target as HTMLImageElement).src = PLACEHOLDER[p.coleccion]; }}
+                  />
+                  {descuento && (
+                    <div className="absolute top-2 left-2 text-white text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: '#f97316' }}>
+                      -{descuento}%
+                    </div>
+                  )}
+                  {p.stock === 0 && (
+                    <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
+                      <span className="text-xs font-semibold text-red-500 bg-white px-2 py-1 rounded-full shadow-sm border border-red-100">
                         Agotado
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Info */}
+                <div className="p-3 flex flex-col justify-between flex-1 overflow-hidden">
+                  <div>
+                    {/* Etiquetas */}
+                    <div className="flex flex-wrap gap-1 mb-1">
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-neutral-600 bg-neutral-100 px-2 py-0.5 rounded-full">
+                        {COLECCION_LABEL[p.coleccion]}
+                      </span>
+                      {(p.subcategoria || p.category) && p.subcategoria !== p.category && (
+                        <span className="text-[10px] text-neutral-500 bg-neutral-100 px-2 py-0.5 rounded-full">
+                          {p.subcategoria || p.category}
+                        </span>
+                      )}
+                      <span
+                        className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${p.stock === 0 ? 'bg-red-50 text-red-600' : 'text-white'}`}
+                        style={p.stock > 0 ? { backgroundColor: '#16a34a' } : {}}
+                      >
+                        {p.stock > 0 ? '● Disponible' : '● Agotado'}
+                      </span>
+                    </div>
+                    <h3 className="text-sm font-semibold text-neutral-900 group-hover:text-orange-600 transition-colors line-clamp-2 leading-snug">
+                      {p.name}
+                    </h3>
+                  </div>
+                  {/* Precio */}
+                  <div className="flex items-center gap-2 flex-wrap">
+
+                    {descuento && precioFormateado && (
+                      <span className="text-xs text-neutral-400 line-through">{precioFormateado}</span>
+                    )}
+                    {(ofertaFormateado || precioFormateado) && (
+                      <span className="text-base font-bold text-red-600">
+                        {ofertaFormateado || precioFormateado}
                       </span>
                     )}
                   </div>
-                  <h3 className="text-sm font-semibold text-neutral-900 group-hover:text-orange-600 transition-colors line-clamp-2 leading-snug">
-                    {p.name}
-                  </h3>
-                  {p.observaciones && (
-                    <p className="text-xs text-neutral-500 mt-0.5 line-clamp-1">{p.observaciones}</p>
-                  )}
                 </div>
-                {p.price > 0 && (
-                  <p className="text-base font-bold text-orange-600">
-                    {p.price.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
-                  </p>
-                )}
-              </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>

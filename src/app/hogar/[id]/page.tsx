@@ -5,7 +5,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { ShareProductButton } from '@/components/ShareProductButton';
 
 type HogarItem = {
@@ -21,10 +21,12 @@ type HogarItem = {
   marca?: string;
   medidas?: string;
   isOferta?: boolean;
+  offerPrice?: number;
 };
 
 export default function HogarDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const router = useRouter();
   const [product, setProduct] = useState<HogarItem | null>(null);
   const [selectedImg, setSelectedImg] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -57,6 +59,7 @@ export default function HogarDetailPage() {
             marca: raw.marca as string | undefined,
             medidas: raw.medidas as string | undefined,
             isOferta: raw.isOferta as boolean | undefined,
+            offerPrice: raw.offerPrice as number | undefined,
           });
         }
       } catch (e) {
@@ -69,12 +72,19 @@ export default function HogarDetailPage() {
     fetchProduct();
   }, [id]);
 
-  if (loading) return <div className="max-w-5xl mx-auto px-4 py-10 opacity-70">Cargando producto…</div>;
-  if (notFound || !product) return <div className="max-w-5xl mx-auto px-4 py-10">Producto no encontrado.</div>;
+  if (loading) return <div className="max-w-6xl mx-auto px-4 py-10 opacity-70">Cargando producto…</div>;
+  if (notFound || !product) return <div className="max-w-6xl mx-auto px-4 py-10">Producto no encontrado.</div>;
 
   const mainImg = product.fotos[selectedImg] || null;
   const precioFormateado = product.price > 0
-    ? product.price.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })
+    ? (product.price % 1 === 0
+      ? `${product.price} €`
+      : product.price.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €')
+    : null;
+  const ofertaFormateado = product.offerPrice
+    ? (product.offerPrice % 1 === 0
+      ? `${product.offerPrice} €`
+      : product.offerPrice.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €')
     : null;
 
   const subcat = product.subcategoria || (
@@ -83,7 +93,11 @@ export default function HogarDetailPage() {
   );
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      <button onClick={() => router.back()} className="inline-flex items-center gap-1.5 text-sm text-neutral-500 hover:text-neutral-800 transition-colors mb-4">
+        ← Volver
+      </button>
+      {/* Breadcrumb */}
       <nav className="flex flex-wrap items-center gap-1.5 text-sm text-neutral-400 mb-6">
         <Link href="/" className="hover:text-neutral-700 transition-colors">Inicio</Link>
         <span>›</span>
@@ -102,9 +116,10 @@ export default function HogarDetailPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
 
-        {/* Imagen */}
+        {/* Columna imágenes */}
         <div className="flex flex-col gap-3">
-          <div className="relative bg-white rounded-2xl border border-neutral-200 overflow-hidden" style={{ height: '400px' }}>
+          {/* Imagen principal */}
+          <div className="relative bg-white rounded-2xl border border-neutral-200 overflow-hidden" style={{ height: '480px' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={mainImg || '/placeholders/hogar.svg'}
@@ -124,13 +139,15 @@ export default function HogarDetailPage() {
               </div>
             )}
           </div>
+
+          {/* Miniaturas */}
           {product.fotos.length > 1 && (
             <div className="flex gap-2 flex-wrap">
               {product.fotos.map((foto, i) => (
                 <div key={i} className="relative group">
                   <button
                     onClick={() => setSelectedImg(i)}
-                    className={`relative rounded-xl overflow-hidden border-2 transition-all bg-white ${selectedImg === i ? 'border-orange-500 shadow-sm' : 'border-neutral-200 hover:border-neutral-400'}`}
+                    className={`relative w-18 h-18 rounded-xl overflow-hidden border-2 transition-all bg-white ${selectedImg === i ? 'border-orange-500 shadow-sm' : 'border-neutral-200 hover:border-neutral-400'}`}
                     style={{ width: '72px', height: '72px' }}
                   >
                     <Image src={foto} alt={`Foto ${i + 1}`} fill className="object-contain p-1.5" unoptimized />
@@ -147,13 +164,19 @@ export default function HogarDetailPage() {
           )}
         </div>
 
-        {/* Info */}
-        <div className="flex flex-col gap-5">
+        {/* Columna info */}
+        <div className="flex flex-col gap-6">
+          {/* Nombre */}
+          <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900 leading-tight">{product.name}</h1>
+
+          {/* Badges estado */}
           <div className="flex flex-wrap gap-2">
-            <span className="px-3 py-1 rounded-full bg-neutral-100 text-xs font-semibold text-neutral-600 uppercase tracking-wide">
-              Hogar
-            </span>
-            {subcat && (
+            {product.category && (
+              <span className="px-3 py-1 rounded-full bg-neutral-100 text-xs font-semibold text-neutral-600 uppercase tracking-wide">
+                {product.category}
+              </span>
+            )}
+            {subcat && subcat !== product.category && (
               <span className="px-3 py-1 rounded-full bg-orange-50 border border-orange-200 text-xs font-semibold text-orange-700">
                 {subcat}
               </span>
@@ -163,44 +186,99 @@ export default function HogarDetailPage() {
                 Artículo de ocasión
               </span>
             )}
-            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${product.stock > 0 ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-red-50 border border-red-200 text-red-600'}`}>
-              {product.stock > 0 ? '● Disponible' : '● No disponible'}
+            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${product.stock > 0 ? 'border text-white' : 'bg-red-50 border border-red-200 text-red-600'}`} style={product.stock > 0 ? { backgroundColor: '#16a34a', borderColor: '#15803d' } : {}}>
+              {product.stock > 0 ? '● Disponible' : '● Agotado'}
             </span>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900 leading-tight">{product.name}</h1>
-
+          {/* Precio */}
           {precioFormateado && (
-            <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-extrabold text-orange-600">{precioFormateado}</span>
-              <span className="text-sm text-neutral-400">IVA incluido</span>
+            <div className="flex flex-col gap-2">
+
+              {product.offerPrice && product.offerPrice < product.price && (
+                <div className="flex items-center gap-2">
+                  {/* % descuento */}
+                  <span className="text-xs font-bold px-2 py-1 rounded" style={{ backgroundColor: '#f97316', color: '#ffffff' }}>
+                    -{Math.round(((product.price - product.offerPrice) / product.price) * 100)}%
+                  </span>
+                  {/* Precio original tachado */}
+                  <span className="text-neutral-400 line-through text-lg">
+                    {precioFormateado}
+                  </span>
+                </div>
+              )}
+
+              {/* Precio principal */}
+              <span className="text-4xl font-extrabold text-red-600 leading-none">
+                {product.offerPrice && product.offerPrice < product.price
+                  ? ofertaFormateado
+                  : precioFormateado}
+              </span>
+
+              {/* Info extra */}
+              <div className="flex flex-col text-sm text-neutral-500 gap-1">
+                <span className="underline cursor-pointer">IVA incl.</span>
+                <span className="underline cursor-pointer text-blue-600">Envío disponible</span>
+              </div>
+
+              {/* Botones WhatsApp y Compartir */}
+              <div className="flex flex-wrap gap-3 pt-1">
+                <a
+                  href={`https://wa.me/34692211145?text=Hola%2C%20me%20interesa%20el%20producto%3A%20${encodeURIComponent(product.name)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold shadow-sm"
+                  style={{ backgroundColor: '#16a34a', color: '#ffffff' }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="w-4 h-4" fill="currentColor" aria-hidden="true">
+                    <path d="M16.04 5C10.55 5 6.11 9.44 6.11 14.93c0 2.1.61 4.03 1.78 5.72L6 26.96l6.48-1.87a9.97 9.97 0 0 0 3.56.65h.01c5.49 0 9.93-4.44 9.93-9.93C26 9.44 21.55 5 16.04 5Zm0 17.9h-.01a8 8 0 0 1-3.43-.81l-.25-.12-3.84 1.11 1.03-3.75-.16-.27a7.9 7.9 0 0 1-1.22-4.24c0-4.38 3.57-7.95 7.96-7.95 2.13 0 4.13.83 5.63 2.33a7.9 7.9 0 0 1 2.33 5.63c0 4.39-3.57 7.96-7.94 7.96Z" />
+                  </svg>
+                  WhatsApp
+                </a>
+                <ShareProductButton title={product.name} description={product.observaciones} />
+              </div>
             </div>
           )}
 
           <hr className="border-neutral-200" />
 
+          {/* Características */}
           {(product.marca || product.medidas || product.observaciones) && (
             <div className="flex flex-col gap-3">
               <h2 className="text-sm font-semibold text-neutral-500 uppercase tracking-wider">Características</h2>
-              <div className="bg-neutral-50 rounded-xl border border-neutral-200 p-4 space-y-3">
+              <div className="bg-white border border-neutral-200 rounded-lg p-4 space-y-2">
                 {product.marca && (
-                  <div className="flex items-center gap-3">
-                    <span className="text-orange-500">•</span>
-                    <span className="text-sm font-medium text-neutral-600 min-w-0 flex-shrink-0">Marca</span>
+                  <div className="flex items-center gap-3 border-b border-neutral-100 pb-2">
+                    <span className="text-orange-500 flex-shrink-0">•</span>
+                    <span className="text-sm font-medium text-neutral-600 w-28 flex-shrink-0">Marca</span>
                     <span className="text-sm text-neutral-900">{product.marca}</span>
                   </div>
                 )}
                 {product.medidas && (
-                  <div className="flex items-center gap-3">
-                    <span className="text-orange-500">•</span>
-                    <span className="text-sm font-medium text-neutral-600 min-w-0 flex-shrink-0">Medidas</span>
+                  <div className="flex items-center gap-3 border-b border-neutral-100 pb-2">
+                    <span className="text-orange-500 flex-shrink-0">•</span>
+                    <span className="text-sm font-medium text-neutral-600 w-28 flex-shrink-0">Medidas</span>
                     <span className="text-sm text-neutral-900">{product.medidas}</span>
+                  </div>
+                )}
+                {product.category && (
+                  <div className="flex items-center gap-3 border-b border-neutral-100 pb-2">
+                    <span className="text-orange-500 flex-shrink-0">•</span>
+                    <span className="text-sm font-medium text-neutral-600 w-28 flex-shrink-0">Categoría</span>
+                    <span className="text-sm text-neutral-900">{product.category}</span>
+                  </div>
+                )}
+                {product.stock !== undefined && (
+                  <div className="flex items-center gap-3 border-b border-neutral-100 pb-2">
+                    <span className="text-orange-500 flex-shrink-0">•</span>
+                    <span className="text-sm font-medium text-neutral-600 w-28 flex-shrink-0">Stock</span>
+                    <span className="text-sm text-neutral-900">{product.stock > 0 ? `${product.stock} unidades` : 'Agotado'}</span>
                   </div>
                 )}
                 {product.observaciones && (
                   <div className="flex items-start gap-3">
-                    <span className="text-orange-500 mt-0.5">•</span>
-                    <span className="text-sm font-medium text-neutral-600 min-w-0 flex-shrink-0">Notas</span>
+                    <span className="text-orange-500 flex-shrink-0 mt-0.5">•</span>
+                    <span className="text-sm font-medium text-neutral-600 w-28 flex-shrink-0">Notas</span>
                     <span className="text-sm text-neutral-900">{product.observaciones}</span>
                   </div>
                 )}
@@ -210,26 +288,11 @@ export default function HogarDetailPage() {
 
           <hr className="border-neutral-200" />
 
-          <div className="flex flex-col gap-3">
-            <p className="text-sm text-neutral-500">Contáctanos para disponibilidad, precio final y transporte.</p>
-            <div className="flex flex-wrap gap-3">
-              <a
-                href={`https://wa.me/34692211145?text=Hola%2C%20me%20interesa%20el%20producto%3A%20${encodeURIComponent(product.name)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold shadow-sm"
-                style={{ backgroundColor: '#16a34a', color: '#ffffff' }}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="w-4 h-4" fill="currentColor" aria-hidden="true">
-                  <path d="M16.04 5C10.55 5 6.11 9.44 6.11 14.93c0 2.1.61 4.03 1.78 5.72L6 26.96l6.48-1.87a9.97 9.97 0 0 0 3.56.65h.01c5.49 0 9.93-4.44 9.93-9.93C26 9.44 21.55 5 16.04 5Zm0 17.9h-.01a8 8 0 0 1-3.43-.81l-.25-.12-3.84 1.11 1.03-3.75-.16-.27a7.9 7.9 0 0 1-1.22-4.24c0-4.38 3.57-7.95 7.96-7.95 2.13 0 4.13.83 5.63 2.33a7.9 7.9 0 0 1 2.33 5.63c0 4.39-3.57 7.96-7.94 7.96Z" />
-                </svg>
-                WhatsApp
-              </a>
-              <Link href="/contacto" className="inline-flex items-center px-5 py-2.5 rounded-xl text-sm font-semibold" style={{ border: '1px solid #d4d4d4', color: '#404040' }}>
-                Contacto
-              </Link>
-              <ShareProductButton title={product.name} description={product.observaciones} />
-            </div>
+          {/* Botón Contacto */}
+          <div className="flex flex-wrap gap-3">
+            <Link href="/contacto" className="inline-flex items-center px-5 py-2.5 rounded-xl text-sm font-semibold" style={{ border: '1px solid #d4d4d4', color: '#404040' }}>
+              Contacto
+            </Link>
           </div>
         </div>
 
@@ -246,7 +309,7 @@ export default function HogarDetailPage() {
             />
             <button
               onClick={() => setIsModalOpen(false)}
-              className="absolute top-2 right-2 bg-white/90 text-gray-700 rounded-full w-9 h-9 flex items-center justify-center text-lg font-bold shadow-sm hover:bg-white transition"
+              className="absolute -top-4 -right-4 bg-white text-gray-700 rounded-full w-10 h-10 flex items-center justify-center text-lg font-bold shadow-md hover:bg-gray-100 transition"
               aria-label="Cerrar vista detallada"
             >
               ✕

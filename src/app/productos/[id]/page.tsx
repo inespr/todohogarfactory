@@ -6,6 +6,7 @@ import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Image from 'next/image';
 import Link from 'next/link';
+import { ShareProductButton } from '@/components/ShareProductButton';
 
 type ProductData = {
   id: string;
@@ -18,6 +19,7 @@ type ProductData = {
   hasDefect: boolean;
   marca?: string;
   medidas?: string;
+  offerPrice?: number;
 };
 
 type ProductCategory = 'electrodomesticos' | 'sofas' | 'hogar' | 'descanso';
@@ -33,6 +35,7 @@ const CATEGORY_LABELS: Record<ProductCategory, string> = {
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const router = useRouter();
   const [product, setProduct] = useState<ProductData & { collectionName: ProductCategory } | null>(null);
   const [selectedImg, setSelectedImg] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -45,10 +48,10 @@ export default function ProductDetailPage() {
         for (const col of COLLECTIONS) {
           const snap = await getDocs(query(collection(db, col), where('__name__', '==', id)));
           if (!snap.empty) {
-            const doc = snap.docs[0];
-            const raw = doc.data() as Record<string, unknown>;
+            const docSnap = snap.docs[0];
+            const raw = docSnap.data() as Record<string, unknown>;
             setProduct({
-              id: doc.id,
+              id: docSnap.id,
               name: raw.name as string,
               observaciones: raw.observaciones as string || '',
               price: raw.price as number ?? 0,
@@ -58,6 +61,7 @@ export default function ProductDetailPage() {
               hasDefect: raw.hasDefect as boolean || false,
               marca: raw.marca as string | undefined,
               medidas: raw.medidas as string | undefined,
+              offerPrice: raw.offerPrice as number | undefined,
               collectionName: col,
             });
             return;
@@ -74,48 +78,57 @@ export default function ProductDetailPage() {
     if (id) fetchProduct();
   }, [id]);
 
-  if (loading) return <div className="max-w-7xl mx-auto px-4 py-10 opacity-70 text-center">Cargando producto…</div>;
-  if (notFound || !product) return <div className="max-w-7xl mx-auto px-4 py-10 text-center">Producto no encontrado.</div>;
+  if (loading) return <div className="max-w-6xl mx-auto px-4 py-10 opacity-70">Cargando producto…</div>;
+  if (notFound || !product) return <div className="max-w-6xl mx-auto px-4 py-10">Producto no encontrado.</div>;
 
   const mainImg = product.fotos?.[selectedImg] || null;
   const precioFormateado = product.price > 0
-    ? product.price.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'
+    ? (product.price % 1 === 0
+      ? `${product.price} €`
+      : product.price.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €')
+    : null;
+  const ofertaFormateado = product.offerPrice
+    ? (product.offerPrice % 1 === 0
+      ? `${product.offerPrice} €`
+      : product.offerPrice.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €')
     : null;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-10">
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      <button onClick={() => router.back()} className="inline-flex items-center gap-1.5 text-sm text-neutral-500 hover:text-neutral-800 transition-colors mb-4">
+        ← Volver
+      </button>
       {/* Breadcrumb */}
-      <nav className="flex flex-wrap items-center gap-2 text-sm text-neutral-600 mb-6">
-        <Link href="/" className="hover:underline">Inicio</Link>
-        <span aria-hidden="true">›</span>
-        <Link href={`/${product.collectionName}`} className="hover:underline">
+      <nav className="flex flex-wrap items-center gap-1.5 text-sm text-neutral-400 mb-6">
+        <Link href="/" className="hover:text-neutral-700 transition-colors">Inicio</Link>
+        <span>›</span>
+        <Link href={`/${product.collectionName}`} className="hover:text-neutral-700 transition-colors">
           {CATEGORY_LABELS[product.collectionName]}
         </Link>
         {product.category && (
           <>
-            <span aria-hidden="true">›</span>
-            <Link href={`/${product.collectionName}?subcategory=${encodeURIComponent(product.category.toLowerCase().replace(/\s+/g, '-'))}`} className="hover:underline">
+            <span>›</span>
+            <Link href={`/${product.collectionName}?subcategory=${encodeURIComponent(product.category.toLowerCase().replace(/\s+/g, '-'))}`} className="hover:text-neutral-700 transition-colors">
               {product.category}
             </Link>
           </>
         )}
-        <span aria-hidden="true">›</span>
-        <span className="font-medium text-neutral-900">{product.name}</span>
+        <span>›</span>
+        <span className="text-neutral-700 font-medium truncate max-w-[200px]">{product.name}</span>
       </nav>
 
-      {/* Grid 2 columnas */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
 
-        {/* COLUMNA IZQUIERDA: Galería */}
+        {/* Columna imágenes */}
         <div className="flex flex-col gap-3">
           {/* Imagen principal */}
-          <div className="relative bg-neutral-50 rounded-2xl border border-neutral-200 overflow-hidden" style={{ height: '500px' }}>
+          <div className="relative bg-white rounded-2xl border border-neutral-200 overflow-hidden" style={{ height: '480px' }}>
             {mainImg ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={mainImg}
                 alt={product.name}
-                className="w-full h-full object-contain p-4 cursor-pointer"
+                style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '32px', cursor: 'pointer' }}
                 onClick={() => setIsModalOpen(true)}
                 onError={(e) => { (e.target as HTMLImageElement).src = '/placeholders/electrodomesticos.svg'; }}
               />
@@ -130,46 +143,29 @@ export default function ProductDetailPage() {
                 />
               </div>
             )}
-
-            {/* Badge Ocasión */}
             {product.hasDefect && (
-              <div className="absolute top-3 left-3">
-                <span className="inline-flex items-center px-3 py-1 rounded-full bg-white border border-neutral-300 text-xs font-semibold text-neutral-900">
-                  Ocasión
-                </span>
+              <div className="absolute top-3 left-3 bg-amber-50 border border-amber-300 text-amber-700 text-xs font-bold px-3 py-1 rounded-full">
+                Ocasión
               </div>
             )}
           </div>
 
-          {/* Thumbnails */}
+          {/* Miniaturas */}
           {product.fotos && product.fotos.length > 1 && (
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               {product.fotos.map((foto, idx) => (
                 <div key={idx} className="relative group">
                   <button
                     onClick={() => setSelectedImg(idx)}
-                    className={`relative w-16 h-16 rounded-lg border-2 overflow-hidden transition-all ${selectedImg === idx
-                      ? 'border-orange-500 ring-2 ring-orange-300'
-                      : 'border-neutral-200 hover:border-neutral-300'
-                      }`}
+                    className={`relative w-18 h-18 rounded-xl overflow-hidden border-2 transition-all bg-white ${selectedImg === idx ? 'border-orange-500 shadow-sm' : 'border-neutral-200 hover:border-neutral-400'}`}
+                    style={{ width: '72px', height: '72px' }}
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={foto}
-                      alt={`Vista ${idx + 1}`}
-                      className="w-full h-full object-cover"
-                      onError={(e) => { (e.target as HTMLImageElement).src = '/placeholders/electrodomesticos.svg'; }}
-                    />
+                    <Image src={foto} alt={`Foto ${idx + 1}`} fill className="object-contain p-1.5" unoptimized />
                   </button>
                   {/* Tooltip con imagen más grande */}
                   <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
                     <div className="bg-white border border-neutral-300 rounded-lg shadow-lg p-2">
-                      <img
-                        src={foto}
-                        alt={`Vista previa ${idx + 1}`}
-                        className="w-48 h-48 object-contain rounded"
-                        onError={(e) => { (e.target as HTMLImageElement).src = '/placeholders/electrodomesticos.svg'; }}
-                      />
+                      <Image src={foto} alt={`Vista previa ${idx + 1}`} width={200} height={200} className="object-contain rounded" unoptimized />
                     </div>
                   </div>
                 </div>
@@ -178,112 +174,131 @@ export default function ProductDetailPage() {
           )}
         </div>
 
-        {/* COLUMNA DERECHA: Información */}
-        <div className="flex flex-col">
-          {/* Badges categoría y ocasión */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            <span className="inline-flex px-3 py-1 rounded-full bg-neutral-100 text-xs font-medium text-neutral-700">
+        {/* Columna info */}
+        <div className="flex flex-col gap-6">
+          {/* Nombre */}
+          <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900 leading-tight">{product.name}</h1>
+
+          {/* Badges estado */}
+          <div className="flex flex-wrap gap-2">
+            <span className="px-3 py-1 rounded-full bg-neutral-100 text-xs font-semibold text-neutral-600 uppercase tracking-wide">
               {CATEGORY_LABELS[product.collectionName]}
             </span>
             {product.hasDefect && (
-              <span className="inline-flex px-3 py-1 rounded-full bg-orange-50 text-xs font-medium text-orange-700">
+              <span className="px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-xs font-semibold text-amber-700">
                 Artículo de ocasión
               </span>
             )}
-            {product.stock > 0 && (
-              <span className="inline-flex px-3 py-1 rounded-full bg-green-50 text-xs font-medium text-green-700">
-                Disponible
-              </span>
-            )}
-            {product.stock === 0 && (
-              <span className="inline-flex px-3 py-1 rounded-full bg-red-50 text-xs font-medium text-red-700">
-                Agotado
-              </span>
-            )}
+            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${product.stock > 0 ? 'border text-white' : 'bg-red-50 border border-red-200 text-red-600'}`} style={product.stock > 0 ? { backgroundColor: '#16a34a', borderColor: '#15803d' } : {}}>
+              {product.stock > 0 ? '● Disponible' : '● Agotado'}
+            </span>
           </div>
 
-          {/* Nombre y precio */}
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-neutral-900">{product.name}</h1>
+          {/* Precio */}
           {precioFormateado && (
-            <p className="text-2xl font-bold text-orange-600 mb-6">{precioFormateado}</p>
+            <div className="flex flex-col gap-2">
+
+              {product.offerPrice && product.offerPrice < product.price && (
+                <div className="flex items-center gap-2">
+                  {/* % descuento */}
+                  <span className="text-xs font-bold px-2 py-1 rounded" style={{ backgroundColor: '#f97316', color: '#ffffff' }}>
+                    -{Math.round(((product.price - product.offerPrice) / product.price) * 100)}%
+                  </span>
+                  {/* Precio original tachado */}
+                  <span className="text-neutral-400 line-through text-lg">
+                    {precioFormateado}
+                  </span>
+                </div>
+              )}
+
+              {/* Precio principal */}
+              <span className="text-4xl font-extrabold text-red-600 leading-none">
+                {product.offerPrice && product.offerPrice < product.price
+                  ? ofertaFormateado
+                  : precioFormateado}
+              </span>
+
+              {/* Info extra */}
+              <div className="flex flex-col text-sm text-neutral-500 gap-1">
+                <span className="underline cursor-pointer">IVA incl.</span>
+                <span className="underline cursor-pointer text-blue-600">Envío disponible</span>
+              </div>
+
+              {/* Botones WhatsApp y Compartir */}
+              <div className="flex flex-wrap gap-3 pt-1">
+                <a
+                  href={`https://wa.me/34692211145?text=Hola%2C%20me%20interesa%20el%20producto%3A%20${encodeURIComponent(product.name)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold shadow-sm"
+                  style={{ backgroundColor: '#16a34a', color: '#ffffff' }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="w-4 h-4" fill="currentColor" aria-hidden="true">
+                    <path d="M16.04 5C10.55 5 6.11 9.44 6.11 14.93c0 2.1.61 4.03 1.78 5.72L6 26.96l6.48-1.87a9.97 9.97 0 0 0 3.56.65h.01c5.49 0 9.93-4.44 9.93-9.93C26 9.44 21.55 5 16.04 5Zm0 17.9h-.01a8 8 0 0 1-3.43-.81l-.25-.12-3.84 1.11 1.03-3.75-.16-.27a7.9 7.9 0 0 1-1.22-4.24c0-4.38 3.57-7.95 7.96-7.95 2.13 0 4.13.83 5.63 2.33a7.9 7.9 0 0 1 2.33 5.63c0 4.39-3.57 7.96-7.94 7.96Z" />
+                  </svg>
+                  WhatsApp
+                </a>
+                <ShareProductButton title={product.name} description={product.observaciones} />
+              </div>
+            </div>
           )}
 
-          {/* Detalles */}
-          <div className="bg-neutral-50 rounded-xl border border-neutral-200 p-4 sm:p-5 mb-6">
-            <h3 className="text-sm font-semibold text-neutral-900 mb-3">Detalles del producto</h3>
-            <div className="space-y-3">
-              {product.marca && (
-                <div className="flex items-center gap-3">
-                  <span className="text-orange-500">•</span>
-                  <span className="text-sm font-medium text-neutral-600 min-w-0 flex-shrink-0">Marca</span>
-                  <span className="text-sm text-neutral-900">{product.marca}</span>
-                </div>
-              )}
-              {product.medidas && (
-                <div className="flex items-center gap-3">
-                  <span className="text-orange-500">•</span>
-                  <span className="text-sm font-medium text-neutral-600 min-w-0 flex-shrink-0">Medidas</span>
-                  <span className="text-sm text-neutral-900">{product.medidas}</span>
-                </div>
-              )}
-              {product.category && (
-                <div className="flex items-center gap-3">
-                  <span className="text-orange-500">•</span>
-                  <span className="text-sm font-medium text-neutral-600 min-w-0 flex-shrink-0">Categoría</span>
-                  <span className="text-sm text-neutral-900">{product.category}</span>
-                </div>
-              )}
-              {product.stock !== undefined && (
-                <div className="flex items-center gap-3">
-                  <span className="text-orange-500">•</span>
-                  <span className="text-sm font-medium text-neutral-600 min-w-0 flex-shrink-0">Stock</span>
-                  <span className="text-sm text-neutral-900">{product.stock > 0 ? `${product.stock} unidades` : 'Agotado'}</span>
-                </div>
-              )}
-              {product.observaciones && (
-                <div className="flex items-start gap-3">
-                  <span className="text-orange-500 mt-0.5">•</span>
-                  <span className="text-sm font-medium text-neutral-600 min-w-0 flex-shrink-0">Notas</span>
-                  <span className="text-sm text-neutral-900">{product.observaciones}</span>
-                </div>
-              )}
-            </div>
-          </div>
+          <hr className="border-neutral-200" />
 
-          {/* CTA Contacto */}
-          <div className="rounded-xl border border-neutral-300 bg-white p-5 sm:p-6">
-            <h3 className="font-semibold text-neutral-900 mb-1">¿Te interesa este producto?</h3>
-            <p className="text-sm text-neutral-700 mb-4">
-              Contáctanos para disponibilidad, precio final y transporte.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <a
-                href={`https://wa.me/34692211145?text=Hola,%20me%20interesa%20el%20producto:%20${encodeURIComponent(product.name)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white text-sm font-medium transition-colors"
-              >
-                <span className="pi pi-whatsapp mr-2" aria-hidden="true" />
-                WhatsApp
-              </a>
-              <Link
-                href="/contacto"
-                className="inline-flex items-center justify-center px-4 py-2 rounded-lg border border-neutral-300 text-neutral-900 text-sm font-medium hover:bg-neutral-50 transition-colors"
-              >
-                Ir a contacto
-              </Link>
+          {/* Características */}
+          {(product.marca || product.medidas || product.category || product.stock !== undefined || product.observaciones) && (
+            <div className="flex flex-col gap-3">
+              <h2 className="text-sm font-semibold text-neutral-500 uppercase tracking-wider">Características</h2>
+              <div className="bg-white border border-neutral-200 rounded-lg p-4 space-y-2">
+                {product.marca && (
+                  <div className="flex items-center gap-3 border-b border-neutral-100 pb-2">
+                    <span className="text-orange-500 flex-shrink-0">•</span>
+                    <span className="text-sm font-medium text-neutral-600 w-28 flex-shrink-0">Marca</span>
+                    <span className="text-sm text-neutral-900">{product.marca}</span>
+                  </div>
+                )}
+                {product.medidas && (
+                  <div className="flex items-center gap-3 border-b border-neutral-100 pb-2">
+                    <span className="text-orange-500 flex-shrink-0">•</span>
+                    <span className="text-sm font-medium text-neutral-600 w-28 flex-shrink-0">Medidas</span>
+                    <span className="text-sm text-neutral-900">{product.medidas}</span>
+                  </div>
+                )}
+                {product.category && (
+                  <div className="flex items-center gap-3 border-b border-neutral-100 pb-2">
+                    <span className="text-orange-500 flex-shrink-0">•</span>
+                    <span className="text-sm font-medium text-neutral-600 w-28 flex-shrink-0">Categoría</span>
+                    <span className="text-sm text-neutral-900">{product.category}</span>
+                  </div>
+                )}
+                {product.stock !== undefined && (
+                  <div className="flex items-center gap-3 border-b border-neutral-100 pb-2">
+                    <span className="text-orange-500 flex-shrink-0">•</span>
+                    <span className="text-sm font-medium text-neutral-600 w-28 flex-shrink-0">Stock</span>
+                    <span className="text-sm text-neutral-900">{product.stock > 0 ? `${product.stock} unidades` : 'Agotado'}</span>
+                  </div>
+                )}
+                {product.observaciones && (
+                  <div className="flex items-start gap-3">
+                    <span className="text-orange-500 flex-shrink-0 mt-0.5">•</span>
+                    <span className="text-sm font-medium text-neutral-600 w-28 flex-shrink-0">Notas</span>
+                    <span className="text-sm text-neutral-900">{product.observaciones}</span>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Volver al listado */}
-          <Link
-            href={`/${product.collectionName}`}
-            className="mt-6 inline-flex items-center text-sm text-neutral-600 hover:text-neutral-900"
-          >
-            <span className="pi pi-arrow-left mr-2" aria-hidden="true" />
-            Volver al listado de {CATEGORY_LABELS[product.collectionName].toLowerCase()}
-          </Link>
+          <hr className="border-neutral-200" />
+
+          {/* Botón Contacto */}
+          <div className="flex flex-wrap gap-3">
+            <Link href="/contacto" className="inline-flex items-center px-5 py-2.5 rounded-xl text-sm font-semibold" style={{ border: '1px solid #d4d4d4', color: '#404040' }}>
+              Contacto
+            </Link>
+          </div>
         </div>
+
       </div>
 
       {/* Modal para imagen grande */}
@@ -297,7 +312,7 @@ export default function ProductDetailPage() {
             />
             <button
               onClick={() => setIsModalOpen(false)}
-              className="absolute -top-4 -right-4 bg-white border border-neutral-200 text-gray-700 rounded-full w-10 h-10 flex items-center justify-center text-xl font-bold shadow-lg hover:bg-white transition"
+              className="absolute -top-4 -right-4 bg-white text-gray-700 rounded-full w-10 h-10 flex items-center justify-center text-lg font-bold shadow-md hover:bg-gray-100 transition"
               aria-label="Cerrar vista detallada"
             >
               ✕
@@ -308,4 +323,3 @@ export default function ProductDetailPage() {
     </div>
   );
 }
-

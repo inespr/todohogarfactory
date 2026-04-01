@@ -2,115 +2,221 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { collection, getDocs, orderBy, query, limit } from 'firebase/firestore';
+import Image from 'next/image';
+import { collection, getDocs, query, where, limit } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
-type FeaturedProduct = {
+type Product = {
   id: string;
   name: string;
   observaciones: string;
   price: number;
+  offerPrice?: number;
   fotos: string[];
   category: string;
+  subcategoria?: string;
+  stock: number;
   coleccion: string;
 };
 
+const CATEGORIAS = [
+  { key: 'electrodomesticos', label: 'Electrodomésticos', placeholder: '/placeholders/electrodomesticos.svg', href: '/electrodomesticos' },
+  { key: 'sofas', label: 'Sofás', placeholder: '/placeholders/sofas.svg', href: '/sofas' },
+  { key: 'hogar', label: 'Hogar', placeholder: '/placeholders/hogar.svg', href: '/hogar' },
+  { key: 'descanso', label: 'Descanso', placeholder: '/placeholders/descanso.svg', href: '/descanso' },
+];
+
+function ProductCard({ p, placeholder }: { p: Product; placeholder: string }) {
+  const hasOffer = p.offerPrice && p.offerPrice < p.price;
+  const descuento = hasOffer ? Math.round(((p.price - p.offerPrice!) / p.price) * 100) : null;
+
+  const formatPrice = (n: number) =>
+    n % 1 === 0 ? `${n} €` : n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+
+  return (
+    <Link
+      href={`/${p.coleccion}/${p.id}`}
+      className="group flex flex-row bg-white rounded-xl border border-neutral-200 overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
+      style={{ height: '160px' }}
+    >
+      {/* Imagen */}
+      <div className="relative bg-neutral-50 shrink-0 overflow-hidden" style={{ width: '150px', minWidth: '150px' }}>
+        <Image
+          src={p.fotos[0] || placeholder}
+          alt={p.name}
+          fill
+          className="object-contain p-3"
+          sizes="150px"
+          unoptimized
+          onError={(e) => { (e.target as HTMLImageElement).src = placeholder; }}
+        />
+        {descuento && (
+          <div className="absolute top-2 left-2 text-white text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: '#f97316' }}>
+            -{descuento}%
+          </div>
+        )}
+        {p.stock === 0 && (
+          <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
+            <span className="text-xs font-semibold text-red-500 bg-white px-2 py-1 rounded-full shadow-sm border border-red-100">
+              Agotado
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Info */}
+      <div className="p-3 flex flex-col justify-between flex-1 overflow-hidden">
+        <div>
+          <p className="text-[10px] text-neutral-400 uppercase tracking-wide truncate">{p.subcategoria || p.category}</p>
+          <h3 className="mt-0.5 text-sm font-semibold text-neutral-900 group-hover:text-orange-600 transition-colors line-clamp-2 leading-snug">
+            {p.name}
+          </h3>
+          {p.observaciones && (
+            <p className="text-xs text-neutral-500 mt-0.5 line-clamp-1">{p.observaciones}</p>
+          )}
+        </div>
+        {p.price > 0 && (
+          <div className="mt-1 flex flex-col">
+            {hasOffer ? (
+              <>
+                <span className="text-base font-bold text-red-600 leading-none">{formatPrice(p.offerPrice!)}</span>
+                <span className="text-xs text-neutral-400 line-through">Antes: {formatPrice(p.price)}</span>
+              </>
+            ) : (
+              <span className="text-sm font-bold text-neutral-900">{formatPrice(p.price)}</span>
+            )}
+          </div>
+        )}
+      </div>
+    </Link>
+  );
+}
+
+function SectionHeader({ title, subtitle, href }: { title: string; subtitle?: string; href: string }) {
+  return (
+    <div className="flex items-end justify-between gap-4 mb-5">
+      <div>
+        <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-neutral-900">{title}</h2>
+        {subtitle && <p className="mt-0.5 text-sm text-neutral-500">{subtitle}</p>}
+      </div>
+      <Link href={href} className="shrink-0 text-sm font-semibold text-orange-600 hover:text-orange-800 transition-colors">
+        Ver más →
+      </Link>
+    </div>
+  );
+}
+
 export default function Home() {
-  const [featured, setFeatured] = useState<FeaturedProduct[]>([]);
+  const [ofertas, setOfertas] = useState<Product[]>([]);
+  const [categorias, setCategorias] = useState<Record<string, Product[]>>({});
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchFeatured = async () => {
+    const fetchAll = async () => {
       try {
-        const q = query(
-          collection(db, 'electrodomesticos'),
-          orderBy('creadoEn', 'desc'),
-          limit(4)
+        const ofertasArr: Product[] = [];
+        const catMap: Record<string, Product[]> = {};
+
+        await Promise.all(
+          CATEGORIAS.map(async ({ key, placeholder }) => {
+            const snap = await getDocs(query(collection(db, key), limit(20)));
+            const products: Product[] = snap.docs.map((d) => {
+              const raw = d.data() as Record<string, unknown>;
+              const fotosArr = (raw.fotos as string[]) || [];
+              const singleImg = raw.urlImg || raw.imageUrl || raw.imagen || raw.foto || raw.img || raw.url || raw.image;
+              return {
+                id: d.id,
+                name: raw.name as string,
+                observaciones: (raw.observaciones as string) || '',
+                price: (raw.price as number) ?? 0,
+                offerPrice: raw.offerPrice as number | undefined,
+                fotos: fotosArr.length > 0 ? fotosArr : (singleImg ? [singleImg as string] : []),
+                category: (raw.category as string) || key,
+                subcategoria: (raw.subcategoria as string) || '',
+                stock: (raw.stock as number) ?? 0,
+                coleccion: key,
+              };
+            });
+
+            // Productos en oferta con descuento
+            products.forEach((p) => {
+              if (p.offerPrice && p.offerPrice < p.price) {
+                ofertasArr.push(p);
+              }
+            });
+
+            // Primeros 4 para la sección de categoría
+            catMap[key] = products.slice(0, 4);
+
+            void placeholder;
+          })
         );
-        const snap = await getDocs(q);
-        const data: FeaturedProduct[] = snap.docs.map((d) => {
-          const raw = d.data() as Record<string, unknown>;
-          return {
-            id: d.id,
-            name: raw.name as string,
-            observaciones: raw.observaciones as string || '',
-            price: raw.price as number ?? 0,
-            fotos: (raw.fotos as string[]) || [],
-            category: raw.category as string || '',
-            coleccion: 'electrodomesticos',
-          };
+
+        // Ordenar ofertas por % de descuento descendente, mostrar top 4
+        ofertasArr.sort((a, b) => {
+          const da = ((a.price - a.offerPrice!) / a.price) * 100;
+          const db2 = ((b.price - b.offerPrice!) / b.price) * 100;
+          return db2 - da;
         });
-        setFeatured(data);
+        setOfertas(ofertasArr.slice(0, 4));
+        setCategorias(catMap);
       } catch (e) {
         console.error(e);
+      } finally {
+        setLoading(false);
       }
     };
-    fetchFeatured();
+    fetchAll();
   }, []);
 
   return (
     <>
-      <div className="max-w-6xl mx-auto px-4 py-8 sm:py-10">
-        <section>
-          <div className="mb-5 flex items-end justify-between gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Destacados</h1>
-              <p className="mt-1 text-sm text-neutral-600">
-                Últimas incorporaciones a nuestro catálogo.
-              </p>
-            </div>
-            <Link href="/electrodomesticos" className="text-sm font-semibold text-orange-700 hover:underline">
-              Ver todo el catálogo →
-            </Link>
-          </div>
+      <div className="max-w-7xl mx-auto px-4 py-8 sm:py-10 flex flex-col">
 
-          {featured.length === 0 ? (
-            <p className="text-center opacity-70 py-16">Cargando productos…</p>
-          ) : (
-            <div className="flex flex-col gap-4">
-              {featured.map((product) => (
-                <Link
-                  key={product.id}
-                  href={`/${product.coleccion}/${product.id}`}
-                  className="group flex flex-row rounded-2xl border border-neutral-200 bg-white overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
-                  style={{ height: '160px' }}
-                >
-                  <div className="relative bg-neutral-100 shrink-0" style={{ width: '150px', minWidth: '150px' }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={product.fotos[0] || '/placeholders/electrodomesticos.svg'}
-                      alt={product.name}
-                      style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '12px' }}
-                      onError={(e) => { (e.target as HTMLImageElement).src = '/placeholders/electrodomesticos.svg'; }}
-                    />
-                  </div>
+        {/* Sección Ofertas */}
+        {(loading || ofertas.length > 0) && (
+          <section className="py-10 border-b border-neutral-200" style={{ borderImage: 'linear-gradient(to right, transparent, #e5e7eb 20%, #e5e7eb 80%, transparent) 1' }}>
+            <SectionHeader
+              title="Ofertas destacadas"
+              subtitle="Los mejores descuentos del momento"
+              href="/ofertas"
+            />
+            {loading ? (
+              <p className="text-center opacity-60 py-10">Cargando…</p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {ofertas.map((p) => (
+                  <ProductCard
+                    key={`${p.coleccion}-${p.id}`}
+                    p={p}
+                    placeholder={CATEGORIAS.find(c => c.key === p.coleccion)?.placeholder || '/placeholders/electrodomesticos.svg'}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+        )}
 
-                  <div className="p-4 flex flex-col justify-between flex-1 overflow-hidden">
-                    <div>
-                      <span className="text-[10px] text-neutral-400 uppercase tracking-wide">{product.category}</span>
-                      <h2 className="mt-0.5 text-sm font-semibold text-neutral-900 group-hover:text-orange-600 line-clamp-2">
-                        {product.name}
-                      </h2>
-                      {product.observaciones && (
-                        <p className="mt-1 text-xs text-neutral-500 line-clamp-2">{product.observaciones}</p>
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between">
-                      {product.price > 0 && (
-                        <p className="text-sm font-bold text-neutral-900">
-                          {product.price % 1 === 0 ? `${product.price} €` : `${product.price.toLocaleString('es-ES')} €`}
-                        </p>
-                      )}
-                      <span className="inline-flex items-center gap-1 text-sm font-semibold text-orange-700">
-                        Ver producto
-                        <span className="transition-transform group-hover:translate-x-0.5">→</span>
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </section>
+        {/* Secciones por categoría */}
+        {CATEGORIAS.map(({ key, label, placeholder, href }, i) => {
+          const items = categorias[key] || [];
+          if (!loading && items.length === 0) return null;
+          return (
+            <section key={key} className={`py-10 ${i < CATEGORIAS.length - 1 ? 'border-b border-neutral-200' : ''}`} style={i < CATEGORIAS.length - 1 ? { borderImage: 'linear-gradient(to right, transparent, #e5e7eb 20%, #e5e7eb 80%, transparent) 1' } : {}}>
+              <SectionHeader title={label} href={href} />
+              {loading ? (
+                <p className="text-center opacity-60 py-10">Cargando…</p>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {items.map((p) => (
+                    <ProductCard key={p.id} p={p} placeholder={placeholder} />
+                  ))}
+                </div>
+              )}
+            </section>
+          );
+        })}
+
       </div>
 
       {/* Botón flotante de WhatsApp */}
