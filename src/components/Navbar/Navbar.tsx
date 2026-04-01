@@ -8,7 +8,6 @@ import { InputIcon } from 'primereact/inputicon';
 import styles from './Navbar.module.css';
 import Link from 'next/link';
 import {
-  SUBCATEGORY_NAMES,
   type Product,
   type ProductCategory,
   searchProducts,
@@ -24,12 +23,18 @@ export function Navbar() {
   const [openMobileCategory, setOpenMobileCategory] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<Product[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [subcategoriesMap, setSubcategoriesMap] = useState<Record<string, string[]>>({});
+  const [subcategoriesMap, setSubcategoriesMap] = useState<Record<string, { slug: string; name: string }[]>>({});
   const pathname = usePathname();
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'catalogoSubcategorias'), (snap) => {
-      const map: Record<string, Set<string>> = {
+      const map: Record<string, { slug: string; name: string }[]> = {
+        electrodomesticos: [],
+        sofas: [],
+        hogar: [],
+        descanso: [],
+      };
+      const seen: Record<string, Set<string>> = {
         electrodomesticos: new Set(),
         sofas: new Set(),
         hogar: new Set(),
@@ -43,12 +48,8 @@ export function Navbar() {
         if (!rawCategory || !rawName) return;
 
         const normalizedCategory = rawCategory
-          .replace('á', 'a')
-          .replace('é', 'e')
-          .replace('í', 'i')
-          .replace('ó', 'o')
-          .replace('ú', 'u')
-          .replace(/ñ/g, 'n');
+          .normalize('NFD')
+          .replace(/\p{Diacritic}/gu, '');
 
         const mainCategory =
           normalizedCategory.includes('electro') ? 'electrodomesticos' :
@@ -59,22 +60,20 @@ export function Navbar() {
 
         if (!mainCategory) return;
 
-        const subcategorySlug = rawName
+        const slug = rawName
           .toLowerCase()
           .normalize('NFD')
           .replace(/\p{Diacritic}/gu, '')
           .replace(/\s+/g, '-')
           .replace(/[^a-z0-9-]/g, '');
 
-        if (subcategorySlug) map[mainCategory].add(subcategorySlug);
+        if (slug && !seen[mainCategory].has(slug)) {
+          seen[mainCategory].add(slug);
+          map[mainCategory].push({ slug, name: rawName });
+        }
       });
 
-      setSubcategoriesMap({
-        electrodomesticos: Array.from(map.electrodomesticos),
-        sofas: Array.from(map.sofas),
-        hogar: Array.from(map.hogar),
-        descanso: Array.from(map.descanso),
-      });
+      setSubcategoriesMap(map);
     });
 
     return () => unsubscribe();
@@ -117,7 +116,7 @@ export function Navbar() {
     setOpenDropdown(null);
   };
 
-  const getSubcategories = (category: ProductCategory) => {
+  const getSubcategories = (category: ProductCategory): { slug: string; name: string }[] => {
     return subcategoriesMap[category] || [];
   };
 
@@ -243,11 +242,11 @@ export function Navbar() {
                   <div className={styles.dropdownContent} onMouseEnter={() => handleMouseEnter(item.category)}>
                     {subcategories.map((subcat) => (
                       <Link
-                        key={subcat}
-                        href={`${item.url}?subcategory=${encodeURIComponent(subcat.toLowerCase())}`}
+                        key={subcat.slug}
+                        href={`${item.url}?subcategory=${encodeURIComponent(subcat.slug)}`}
                         className={styles.dropdownItem}
                       >
-                        {SUBCATEGORY_NAMES[subcat.toLowerCase()] || subcat}
+                        {subcat.name}
                       </Link>
                     ))}
                   </div>
@@ -350,12 +349,12 @@ export function Navbar() {
                   <div className={styles.mobileSubmenu}>
                     {subcategories.map((subcat) => (
                       <Link
-                        key={subcat}
-                        href={`${item.url}?subcategory=${encodeURIComponent(subcat.toLowerCase())}`}
+                        key={subcat.slug}
+                        href={`${item.url}?subcategory=${encodeURIComponent(subcat.slug)}`}
                         className={styles.mobileSublink}
                         onClick={closeMobileMenu}
                       >
-                        {SUBCATEGORY_NAMES[subcat.toLowerCase()] || subcat}
+                        {subcat.name}
                       </Link>
                     ))}
                   </div>

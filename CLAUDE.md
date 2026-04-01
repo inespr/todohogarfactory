@@ -1,0 +1,4 @@
+- Solo analiza código dentro de /src
+- Ignora node_modules, build, .next, out
+- No leas archivos .env
+- Responde de forma concisa

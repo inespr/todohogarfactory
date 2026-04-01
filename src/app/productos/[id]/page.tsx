@@ -37,6 +37,7 @@ export default function ProductDetailPage() {
   const [selectedImg, setSelectedImg] = useState(0);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -114,7 +115,8 @@ export default function ProductDetailPage() {
               <img
                 src={mainImg}
                 alt={product.name}
-                className="w-full h-full object-contain p-4"
+                className="w-full h-full object-contain p-4 cursor-pointer"
+                onClick={() => setIsModalOpen(true)}
                 onError={(e) => { (e.target as HTMLImageElement).src = '/placeholders/electrodomesticos.svg'; }}
               />
             ) : (
@@ -143,22 +145,34 @@ export default function ProductDetailPage() {
           {product.fotos && product.fotos.length > 1 && (
             <div className="flex gap-2">
               {product.fotos.map((foto, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setSelectedImg(idx)}
-                  className={`relative w-16 h-16 rounded-lg border-2 overflow-hidden transition-all ${selectedImg === idx
-                    ? 'border-orange-500 ring-2 ring-orange-300'
-                    : 'border-neutral-200 hover:border-neutral-300'
-                    }`}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={foto}
-                    alt={`Vista ${idx + 1}`}
-                    className="w-full h-full object-cover"
-                    onError={(e) => { (e.target as HTMLImageElement).src = '/placeholders/electrodomesticos.svg'; }}
-                  />
-                </button>
+                <div key={idx} className="relative group">
+                  <button
+                    onClick={() => setSelectedImg(idx)}
+                    className={`relative w-16 h-16 rounded-lg border-2 overflow-hidden transition-all ${selectedImg === idx
+                      ? 'border-orange-500 ring-2 ring-orange-300'
+                      : 'border-neutral-200 hover:border-neutral-300'
+                      }`}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={foto}
+                      alt={`Vista ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                      onError={(e) => { (e.target as HTMLImageElement).src = '/placeholders/electrodomesticos.svg'; }}
+                    />
+                  </button>
+                  {/* Tooltip con imagen más grande */}
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+                    <div className="bg-white border border-neutral-300 rounded-lg shadow-lg p-2">
+                      <img
+                        src={foto}
+                        alt={`Vista previa ${idx + 1}`}
+                        className="w-48 h-48 object-contain rounded"
+                        onError={(e) => { (e.target as HTMLImageElement).src = '/placeholders/electrodomesticos.svg'; }}
+                      />
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
           )}
@@ -195,25 +209,45 @@ export default function ProductDetailPage() {
           )}
 
           {/* Detalles */}
-          <div className="bg-neutral-50 rounded-xl border border-neutral-200 p-4 sm:p-5 mb-6 space-y-3">
-            {product.marca && (
-              <div className="flex gap-4">
-                <span className="text-sm font-medium text-neutral-600 min-w-24">Marca</span>
-                <span className="text-sm text-neutral-900 font-medium">{product.marca}</span>
-              </div>
-            )}
-            {product.medidas && (
-              <div className="flex gap-4">
-                <span className="text-sm font-medium text-neutral-600 min-w-24">Medidas</span>
-                <span className="text-sm text-neutral-900">{product.medidas}</span>
-              </div>
-            )}
-            {product.observaciones && (
-              <div className="flex gap-4">
-                <span className="text-sm font-medium text-neutral-600 min-w-24">Notas</span>
-                <span className="text-sm text-neutral-900">{product.observaciones}</span>
-              </div>
-            )}
+          <div className="bg-neutral-50 rounded-xl border border-neutral-200 p-4 sm:p-5 mb-6">
+            <h3 className="text-sm font-semibold text-neutral-900 mb-3">Detalles del producto</h3>
+            <div className="space-y-3">
+              {product.marca && (
+                <div className="flex items-center gap-3">
+                  <span className="text-orange-500">•</span>
+                  <span className="text-sm font-medium text-neutral-600 min-w-0 flex-shrink-0">Marca</span>
+                  <span className="text-sm text-neutral-900">{product.marca}</span>
+                </div>
+              )}
+              {product.medidas && (
+                <div className="flex items-center gap-3">
+                  <span className="text-orange-500">•</span>
+                  <span className="text-sm font-medium text-neutral-600 min-w-0 flex-shrink-0">Medidas</span>
+                  <span className="text-sm text-neutral-900">{product.medidas}</span>
+                </div>
+              )}
+              {product.category && (
+                <div className="flex items-center gap-3">
+                  <span className="text-orange-500">•</span>
+                  <span className="text-sm font-medium text-neutral-600 min-w-0 flex-shrink-0">Categoría</span>
+                  <span className="text-sm text-neutral-900">{product.category}</span>
+                </div>
+              )}
+              {product.stock !== undefined && (
+                <div className="flex items-center gap-3">
+                  <span className="text-orange-500">•</span>
+                  <span className="text-sm font-medium text-neutral-600 min-w-0 flex-shrink-0">Stock</span>
+                  <span className="text-sm text-neutral-900">{product.stock > 0 ? `${product.stock} unidades` : 'Agotado'}</span>
+                </div>
+              )}
+              {product.observaciones && (
+                <div className="flex items-start gap-3">
+                  <span className="text-orange-500 mt-0.5">•</span>
+                  <span className="text-sm font-medium text-neutral-600 min-w-0 flex-shrink-0">Notas</span>
+                  <span className="text-sm text-neutral-900">{product.observaciones}</span>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* CTA Contacto */}
@@ -251,6 +285,26 @@ export default function ProductDetailPage() {
           </Link>
         </div>
       </div>
+
+      {/* Modal para imagen grande */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 sm:p-8 z-50" onClick={() => setIsModalOpen(false)}>
+          <div className="relative w-full max-w-[92vw] max-h-[92vh] rounded-xl bg-white p-2 sm:p-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <img
+              src={mainImg || '/placeholders/electrodomesticos.svg'}
+              alt={product.name}
+              className="w-full h-full max-h-[84vh] object-contain rounded-lg"
+            />
+            <button
+              onClick={() => setIsModalOpen(false)}
+              className="absolute -top-4 -right-4 bg-white border border-neutral-200 text-gray-700 rounded-full w-10 h-10 flex items-center justify-center text-xl font-bold shadow-lg hover:bg-white transition"
+              aria-label="Cerrar vista detallada"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

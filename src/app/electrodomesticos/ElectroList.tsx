@@ -13,6 +13,7 @@ type Product = {
   name: string;
   observaciones: string;
   category: string;
+  subcategoria?: string;
   fotos: string[];
   stock: number;
   price: number;
@@ -27,6 +28,9 @@ export function ElectroList() {
   const [filteredItems, setFilteredItems] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('Todos');
+
+  const normalizeForCompare = (str: string) =>
+    str.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim();
 
   // Sincroniza el filtro con el parámetro de la URL (?subcategory=lavadora)
   const normalizeSubcategorySlug = (slug: string) => {
@@ -60,6 +64,7 @@ export function ElectroList() {
             name: raw.name as string,
             observaciones: raw.observaciones as string || '',
             category: raw.category as string || '',
+            subcategoria: raw.subcategoria as string || '',
             fotos: (raw.fotos as string[]) || [],
             stock: raw.stock as number ?? 0,
             price: raw.price as number ?? 0,
@@ -72,9 +77,10 @@ export function ElectroList() {
         const seen = new Set<string>();
         const cats: string[] = [];
         electroProducts.forEach((p) => {
-          if (p.category && !seen.has(p.category)) {
-            seen.add(p.category);
-            cats.push(p.category);
+          const label = p.subcategoria || p.category;
+          if (label && !seen.has(label)) {
+            seen.add(label);
+            cats.push(label);
           }
         });
         setCategories(['Todos', ...cats]);
@@ -90,9 +96,10 @@ export function ElectroList() {
   useEffect(() => {
     let updated = [...items];
     if (selectedCategory !== 'Todos') {
-      updated = updated.filter((p) =>
-        p.category.toLowerCase() === selectedCategory.toLowerCase()
-      );
+      updated = updated.filter((p) => {
+        const label = p.subcategoria || p.category;
+        return normalizeForCompare(label) === normalizeForCompare(selectedCategory);
+      });
     }
     if (sortBy === 'price-asc') updated.sort((a, b) => a.price - b.price);
     else if (sortBy === 'price-desc') updated.sort((a, b) => b.price - a.price);
@@ -103,14 +110,12 @@ export function ElectroList() {
 
   const countFor = (cat: string) => {
     if (cat === 'Todos') return items.length;
-    return items.filter((p) => p.category.toLowerCase() === cat.toLowerCase()).length;
+    return items.filter((p) => normalizeForCompare(p.subcategoria || p.category) === normalizeForCompare(cat)).length;
   };
 
   if (loading) return <p className="opacity-70 py-10 text-center">Cargando productos…</p>;
 
-  const matchedCategory = subcategoryParam
-    ? items.find(p => p.category.toLowerCase() === subcategoryParam.toLowerCase())?.category
-    : null;
+  const matchedCategory = selectedCategory !== 'Todos' ? selectedCategory : null;
 
   return (
     <>
@@ -188,55 +193,54 @@ export function ElectroList() {
             </select>
           </div>
 
-          {/* Grid de productos */}
+          {/* Lista de productos */}
           {filteredItems.length === 0 ? (
             <p className="text-center opacity-70 py-16">No hay productos en esta categoría.</p>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4" style={{ gridAutoRows: '280px' }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {filteredItems.map((p) => (
-                <div key={p.id} style={{ height: '280px', minHeight: '280px', maxHeight: '280px' }}>
-                  <Link
-                    href={`/electrodomesticos/${p.id}`}
-                    className="group flex flex-col bg-white rounded-2xl border border-neutral-200 overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all w-full"
-                    style={{ height: '280px' }}
-                  >
-                    {/* Imagen */}
-                    <div className="relative bg-neutral-50 shrink-0" style={{ height: '160px', minHeight: '160px' }}>
-                      <Image
-                        src={p.fotos[0] || '/placeholders/electrodomesticos.svg'}
-                        alt={p.name}
-                        fill
-                        className="object-contain p-3"
-                        sizes="25vw"
-                        unoptimized
-                        onError={(e) => { (e.target as HTMLImageElement).src = '/placeholders/electrodomesticos.svg'; }}
-                      />
-                      {p.stock === 0 && (
-                        <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
-                          <span className="text-xs font-semibold text-red-500 bg-white px-2 py-1 rounded-full shadow-sm border border-red-100">
-                            Agotado
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Info */}
-                    <div className="p-3 flex flex-col justify-between flex-1 overflow-hidden">
-                      <div>
-                        <p className="text-[10px] text-neutral-400 uppercase tracking-wide truncate">{p.category}</p>
-                        <h3 className="mt-0.5 text-sm font-semibold text-neutral-900 group-hover:text-orange-600 transition-colors line-clamp-2 leading-snug">
-                          {p.name}
-                        </h3>
-                        <p className="text-xs text-neutral-600 mt-1 line-clamp-1">{p.observaciones}</p>
+                <Link
+                  key={p.id}
+                  href={`/electrodomesticos/${p.id}`}
+                  className="group flex flex-row bg-white rounded-2xl border border-neutral-200 overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
+                  style={{ height: '160px' }}
+                >
+                  {/* Imagen */}
+                  <div className="relative bg-neutral-50 shrink-0" style={{ width: '150px', minWidth: '150px' }}>
+                    <Image
+                      src={p.fotos[0] || '/placeholders/electrodomesticos.svg'}
+                      alt={p.name}
+                      fill
+                      className="object-contain p-3"
+                      sizes="150px"
+                      unoptimized
+                      onError={(e) => { (e.target as HTMLImageElement).src = '/placeholders/electrodomesticos.svg'; }}
+                    />
+                    {p.stock === 0 && (
+                      <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
+                        <span className="text-xs font-semibold text-red-500 bg-white px-2 py-1 rounded-full shadow-sm border border-red-100">
+                          Agotado
+                        </span>
                       </div>
-                      {p.price > 0 && (
-                        <p className="text-sm font-bold text-neutral-900 mt-1">
-                          {p.price.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
-                        </p>
-                      )}
+                    )}
+                  </div>
+
+                  {/* Info */}
+                  <div className="p-3 flex flex-col justify-between flex-1 overflow-hidden">
+                    <div>
+                      <p className="text-[10px] text-neutral-400 uppercase tracking-wide truncate">{p.subcategoria || p.category}</p>
+                      <h3 className="mt-0.5 text-sm font-semibold text-neutral-900 group-hover:text-orange-600 transition-colors line-clamp-2 leading-snug">
+                        {p.name}
+                      </h3>
+                      <p className="text-xs text-neutral-600 mt-1 line-clamp-2">{p.observaciones}</p>
                     </div>
-                  </Link>
-                </div>
+                    {p.price > 0 && (
+                      <p className="text-sm font-bold text-neutral-900 mt-1">
+                        {p.price.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
+                      </p>
+                    )}
+                  </div>
+                </Link>
               ))}
             </div>
           )}

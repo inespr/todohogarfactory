@@ -15,6 +15,7 @@ type CategoryItem = {
   price?: number;
   stock?: number;
   category: string;
+  subcategoria?: string;
   fotos: string[];
   hasDefect?: boolean;
 };
@@ -36,6 +37,9 @@ export function CategoryList({ collection: collectionName, placeholder, detailBa
   const [selectedCategory, setSelectedCategory] = useState<string>('Todos');
   const [sortBy, setSortBy] = useState<string>('default');
   const [loading, setLoading] = useState(true);
+
+  const normalizeForCompare = (str: string) =>
+    str.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim();
 
   const normalizeSubcategorySlug = (slug: string) => {
     const candidate = SUBCATEGORY_NAMES[slug.toLowerCase()];
@@ -72,7 +76,13 @@ export function CategoryList({ collection: collectionName, placeholder, detailBa
             price: raw.price as number | undefined,
             stock: raw.stock as number | undefined,
             category: raw.category as string || collectionName,
-            fotos: (raw.fotos as string[]) || [],
+            subcategoria: raw.subcategoria as string || '',
+            fotos: (() => {
+              const arr = (raw.fotos as string[]) || [];
+              if (arr.length > 0) return arr;
+              const single = raw.urlImg || raw.imageUrl || raw.imagen || raw.foto || raw.img || raw.url || raw.image;
+              return single ? [single as string] : [];
+            })(),
             hasDefect: raw.hasDefect as boolean | undefined,
           };
         });
@@ -82,7 +92,7 @@ export function CategoryList({ collection: collectionName, placeholder, detailBa
 
         const seen = new Map<string, string>();
         data.forEach((p) => {
-          const raw = (p.category || 'Sin categoría').trim();
+          const raw = (p.subcategoria || p.category || 'Sin categoría').trim();
           if (!seen.has(raw.toLowerCase())) seen.set(raw.toLowerCase(), raw);
         });
         setCategories(['Todos', ...Array.from(seen.values())]);
@@ -99,7 +109,7 @@ export function CategoryList({ collection: collectionName, placeholder, detailBa
     let updated = [...items];
     if (selectedCategory !== 'Todos') {
       if (selectedCategory === 'Ocasión') updated = updated.filter((p) => p.hasDefect);
-      else updated = updated.filter((p) => (p.category || '').trim().toLowerCase() === selectedCategory.toLowerCase());
+      else updated = updated.filter((p) => normalizeForCompare(p.subcategoria || p.category || '') === normalizeForCompare(selectedCategory));
     }
     if (sortBy === 'price-asc') updated.sort((a, b) => (a.price ?? 0) - (b.price ?? 0));
     else if (sortBy === 'price-desc') updated.sort((a, b) => (b.price ?? 0) - (a.price ?? 0));
@@ -110,7 +120,7 @@ export function CategoryList({ collection: collectionName, placeholder, detailBa
 
   const countFor = (cat: string) => {
     if (cat === 'Todos') return items.length;
-    return items.filter((p) => (p.category || '').trim().toLowerCase() === cat.toLowerCase()).length;
+    return items.filter((p) => normalizeForCompare(p.subcategoria || p.category || '') === normalizeForCompare(cat)).length;
   };
 
   if (loading) return <p className="opacity-70 py-10 text-center">Cargando productos…</p>;
@@ -185,55 +195,54 @@ export function CategoryList({ collection: collectionName, placeholder, detailBa
           </select>
         </div>
 
-        {/* Grid de productos */}
+        {/* Lista de productos */}
         {filteredItems.length === 0 ? (
           <p className="text-center opacity-70 py-16">No hay productos en esta categoría.</p>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4" style={{ gridAutoRows: '280px' }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {filteredItems.map((p) => (
-              <div key={p.id} style={{ height: '280px', minHeight: '280px', maxHeight: '280px' }}>
-                <Link
-                  href={`${detailBase}/${p.id}`}
-                  className="group flex flex-col bg-white rounded-2xl border border-neutral-200 overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all w-full"
-                  style={{ height: '280px' }}
-                >
-                  {/* Imagen */}
-                  <div className="relative bg-neutral-50 shrink-0" style={{ height: '160px', minHeight: '160px' }}>
-                    <Image
-                      src={p.fotos[0] || placeholder}
-                      alt={p.name}
-                      fill
-                      className="object-contain p-3"
-                      sizes="25vw"
-                      unoptimized
-                      onError={(e) => { (e.target as HTMLImageElement).src = placeholder; }}
-                    />
-                    {p.stock === 0 && (
-                      <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
-                        <span className="text-xs font-semibold text-red-500 bg-white px-2 py-1 rounded-full shadow-sm border border-red-100">
-                          Agotado
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Info */}
-                  <div className="p-3 flex flex-col justify-between flex-1 overflow-hidden">
-                    <div>
-                      <p className="text-[10px] text-neutral-400 uppercase tracking-wide truncate">{p.category}</p>
-                      <h3 className="mt-0.5 text-sm font-semibold text-neutral-900 group-hover:text-orange-600 transition-colors line-clamp-2 leading-snug">
-                        {p.name}
-                      </h3>
-                      <p className="text-xs text-neutral-600 mt-1 line-clamp-1">{p.observaciones}</p>
+              <Link
+                key={p.id}
+                href={`${detailBase}/${p.id}`}
+                className="group flex flex-row bg-white rounded-2xl border border-neutral-200 overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
+                style={{ height: '160px' }}
+              >
+                {/* Imagen */}
+                <div className="relative bg-neutral-50 shrink-0" style={{ width: '150px', minWidth: '150px' }}>
+                  <Image
+                    src={p.fotos[0] || placeholder}
+                    alt={p.name}
+                    fill
+                    className="object-contain p-3"
+                    sizes="150px"
+                    unoptimized
+                    onError={(e) => { (e.target as HTMLImageElement).src = placeholder; }}
+                  />
+                  {p.stock === 0 && (
+                    <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
+                      <span className="text-xs font-semibold text-red-500 bg-white px-2 py-1 rounded-full shadow-sm border border-red-100">
+                        Agotado
+                      </span>
                     </div>
-                    {p.price != null && p.price > 0 && (
-                      <p className="text-sm font-bold text-neutral-900 mt-1">
-                        {p.price.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
-                      </p>
-                    )}
+                  )}
+                </div>
+
+                {/* Info */}
+                <div className="p-3 flex flex-col justify-between flex-1 overflow-hidden">
+                  <div>
+                    <p className="text-[10px] text-neutral-400 uppercase tracking-wide truncate">{p.subcategoria || p.category}</p>
+                    <h3 className="mt-0.5 text-sm font-semibold text-neutral-900 group-hover:text-orange-600 transition-colors line-clamp-2 leading-snug">
+                      {p.name}
+                    </h3>
+                    <p className="text-xs text-neutral-600 mt-1 line-clamp-2">{p.observaciones}</p>
                   </div>
-                </Link>
-              </div>
+                  {p.price != null && p.price > 0 && (
+                    <p className="text-sm font-bold text-neutral-900 mt-1">
+                      {p.price.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
+                    </p>
+                  )}
+                </div>
+              </Link>
             ))}
           </div>
         )}
