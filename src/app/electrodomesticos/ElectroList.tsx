@@ -67,7 +67,7 @@ export function ElectroList() {
             category: raw.category as string || '',
             subcategoria: raw.subcategoria as string || '',
             fotos: (raw.fotos as string[]) || [],
-            stock: raw.stock as number ?? 0,
+            stock: typeof raw.stock === 'boolean' ? (raw.stock ? 1 : 0) : ((raw.stock as number) ?? 0),
             price: raw.price as number ?? 0,
             offerPrice: raw.offerPrice as number ?? 0,
             hasDefect: raw.hasDefect as boolean || false,
@@ -107,6 +107,7 @@ export function ElectroList() {
     else if (sortBy === 'price-desc') updated.sort((a, b) => b.price - a.price);
     else if (sortBy === 'name-asc') updated.sort((a, b) => a.name.localeCompare(b.name));
     else if (sortBy === 'name-desc') updated.sort((a, b) => b.name.localeCompare(a.name));
+    updated.sort((a, b) => (a.stock === 0 ? 1 : 0) - (b.stock === 0 ? 1 : 0));
     setFilteredItems(updated);
   }, [selectedCategory, sortBy, items]);
 
@@ -213,21 +214,19 @@ export function ElectroList() {
                       src={p.fotos[0] || '/placeholders/electrodomesticos.svg'}
                       alt={p.name}
                       fill
-                      className="object-contain p-3"
+                      className={`object-contain p-3 transition-all${p.stock === 0 ? ' grayscale opacity-50' : ''}`}
                       sizes="150px"
                       unoptimized
                       onError={(e) => { (e.target as HTMLImageElement).src = '/placeholders/electrodomesticos.svg'; }}
                     />
-                    {p.offerPrice && p.offerPrice < p.price && (
+                    {p.offerPrice && p.offerPrice < p.price && p.stock !== 0 && (
                       <div className="absolute top-2 left-2 text-white text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: '#f97316' }}>
                         -{Math.round(((p.price - p.offerPrice) / p.price) * 100)}%
                       </div>
                     )}
                     {p.stock === 0 && (
-                      <div className="absolute inset-0 bg-white/60 flex items-center justify-center relative bg-neutral-50 shrink-0 overflow-hidden">
-                        <span className="text-xs font-semibold text-red-500 bg-white px-2 py-1 rounded-full shadow-sm border border-red-100">
-                          Agotado
-                        </span>
+                      <div className="absolute inset-x-0 bottom-0 bg-red-600 text-white text-[11px] font-black uppercase tracking-widest text-center py-1.5">
+                        VENDIDO
                       </div>
                     )}
                   </div>

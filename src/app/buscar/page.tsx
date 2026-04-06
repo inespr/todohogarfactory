@@ -14,6 +14,7 @@ type Product = {
   price: number;
   fotos: string[];
   category: string;
+  stock: number;
 };
 
 const COLLECTIONS = ['electrodomesticos'];
@@ -41,6 +42,7 @@ function BuscarContent() {
               price: raw.price as number ?? 0,
               fotos: (raw.fotos as string[]) || [],
               category: col,
+              stock: typeof raw.stock === 'boolean' ? (raw.stock ? 1 : 0) : ((raw.stock as number) ?? 0),
             });
           });
         }
@@ -86,16 +88,21 @@ function BuscarContent() {
                 className="group flex flex-col bg-white rounded-2xl border border-neutral-200 overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all w-full"
                 style={{ height: '280px' }}
               >
-                <div className="relative bg-neutral-50 shrink-0" style={{ height: '160px' }}>
+                <div className="relative bg-neutral-50 shrink-0 overflow-hidden" style={{ height: '160px' }}>
                   <Image
                     src={p.fotos[0] || getPlaceholder(p.category)}
                     alt={p.name}
                     fill
-                    className="object-contain p-3"
+                    className={`object-contain p-3 transition-all${p.stock === 0 ? ' grayscale opacity-50' : ''}`}
                     sizes="25vw"
                     unoptimized
                     onError={(e) => { (e.target as HTMLImageElement).src = getPlaceholder(p.category); }}
                   />
+                  {p.stock === 0 && (
+                    <div className="absolute inset-x-0 bottom-0 bg-red-600 text-white text-[11px] font-black uppercase tracking-widest text-center py-1.5">
+                      VENDIDO
+                    </div>
+                  )}
                 </div>
                 <div className="p-3 flex flex-col flex-1 min-w-0">
                   <p className="text-[10px] text-neutral-400 uppercase tracking-wide truncate">{p.category}</p>

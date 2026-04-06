@@ -300,20 +300,27 @@ export default function HogarDetailPage() {
 
       {/* Modal para imagen grande */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 sm:p-8 z-50" onClick={() => setIsModalOpen(false)}>
-          <div className="relative w-full max-w-[92vw] max-h-[92vh] rounded-xl bg-white p-2 sm:p-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <img
-              src={mainImg || '/placeholders/hogar.svg'}
-              alt={product.name}
-              className="w-full h-full max-h-[84vh] object-contain rounded-lg"
-            />
-            <button
-              onClick={() => setIsModalOpen(false)}
-              className="absolute -top-4 -right-4 bg-white text-gray-700 rounded-full w-10 h-10 flex items-center justify-center text-lg font-bold shadow-md hover:bg-gray-100 transition"
-              aria-label="Cerrar vista detallada"
-            >
-              ✕
-            </button>
+        <div className="fixed inset-0 bg-black/75 flex items-center justify-center p-4 z-50" onClick={() => setIsModalOpen(false)}>
+          <div className="relative w-full max-w-3xl rounded-2xl bg-white shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="relative flex items-center px-4 py-3 border-b">
+              <span className="text-sm font-medium text-gray-600 truncate pr-10">{product.name}</span>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="absolute right-3 flex items-center justify-center w-8 h-8 rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition"
+                aria-label="Cerrar vista detallada"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+            <div className="p-4">
+              <img
+                src={mainImg || '/placeholders/hogar.svg'}
+                alt={product.name}
+                className="w-full max-h-[75vh] object-contain rounded-lg"
+              />
+            </div>
           </div>
         </div>
       )}

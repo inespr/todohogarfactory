@@ -76,7 +76,7 @@ export function CategoryList({ collection: collectionName, placeholder, detailBa
             observaciones: raw.observaciones as string || '',
             price: raw.price as number | undefined,
             offerPrice: raw.offerPrice as number | undefined,
-            stock: raw.stock as number | undefined,
+            stock: typeof raw.stock === 'boolean' ? (raw.stock ? 1 : 0) : (raw.stock as number | undefined),
             category: raw.category as string || collectionName,
             subcategoria: raw.subcategoria as string || '',
             fotos: (() => {
@@ -117,6 +117,7 @@ export function CategoryList({ collection: collectionName, placeholder, detailBa
     else if (sortBy === 'price-desc') updated.sort((a, b) => (b.price ?? 0) - (a.price ?? 0));
     else if (sortBy === 'name-asc') updated.sort((a, b) => a.name.localeCompare(b.name));
     else if (sortBy === 'name-desc') updated.sort((a, b) => b.name.localeCompare(a.name));
+    updated.sort((a, b) => ((a.stock ?? 0) === 0 ? 1 : 0) - ((b.stock ?? 0) === 0 ? 1 : 0));
     setFilteredItems(updated);
   }, [selectedCategory, sortBy, items]);
 
@@ -215,21 +216,19 @@ export function CategoryList({ collection: collectionName, placeholder, detailBa
                     src={p.fotos[0] || placeholder}
                     alt={p.name}
                     fill
-                    className="object-contain p-3"
+                    className={`object-contain p-3 transition-all${(p.stock ?? 0) === 0 ? ' grayscale opacity-50' : ''}`}
                     sizes="150px"
                     unoptimized
                     onError={(e) => { (e.target as HTMLImageElement).src = placeholder; }}
                   />
-                  {p.offerPrice && p.price && p.offerPrice < p.price && (
+                  {p.offerPrice && p.price && p.offerPrice < p.price && (p.stock ?? 0) !== 0 && (
                     <div className="absolute top-2 left-2 text-white text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: '#f97316' }}>
                       -{Math.round(((p.price - p.offerPrice) / p.price) * 100)}%
                     </div>
                   )}
-                  {p.stock === 0 && (
-                    <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
-                      <span className="text-xs font-semibold text-red-500 bg-white px-2 py-1 rounded-full shadow-sm border border-red-100">
-                        Agotado
-                      </span>
+                  {(p.stock ?? 0) === 0 && (
+                    <div className="absolute inset-x-0 bottom-0 bg-red-600 text-white text-[11px] font-black uppercase tracking-widest text-center py-1.5">
+                      VENDIDO
                     </div>
                   )}
                 </div>
