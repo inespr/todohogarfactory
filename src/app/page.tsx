@@ -46,7 +46,7 @@ function ProductCard({ p, placeholder }: { p: Product; placeholder: string }) {
       )}
 
       {/* Imagen */}
-      <div className="relative bg-neutral-50 w-full shrink-0 overflow-hidden" style={{ height: '160px' }}>
+      <div className="card-img">
         <Image
           src={p.fotos[0] || placeholder}
           alt={p.name}
@@ -66,7 +66,7 @@ function ProductCard({ p, placeholder }: { p: Product; placeholder: string }) {
       </div>
 
       {/* Info */}
-      <div className="p-3 flex flex-col" style={{ height: '120px', overflow: 'hidden' }}>
+      <div className="card-info p-3 flex flex-col">
         <p className="text-[10px] text-neutral-400 uppercase tracking-wide truncate">{p.subcategoria || p.category}</p>
         <h3
           className="mt-0.5 text-sm font-semibold text-neutral-900 group-hover:text-orange-600 transition-colors leading-snug"
@@ -170,7 +170,7 @@ export default function Home() {
 
   return (
     <>
-      <div className="max-w-7xl mx-auto px-4 py-8 sm:py-10 flex flex-col">
+      <div className="max-w-screen-2xl mx-auto px-3 sm:px-6 py-6 sm:py-10 flex flex-col">
 
         {/* Sección Ofertas */}
         {(loading || ofertas.length > 0) && (
@@ -183,7 +183,7 @@ export default function Home() {
             {loading ? (
               <p className="text-center opacity-60 py-10">Cargando…</p>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4" style={{ gridAutoRows: '280px' }}>
+              <div className="product-grid grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                 {ofertas.map((p) => (
                   <ProductCard
                     key={`${p.coleccion}-${p.id}`}
@@ -206,7 +206,7 @@ export default function Home() {
               {loading ? (
                 <p className="text-center opacity-60 py-10">Cargando…</p>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4" style={{ gridAutoRows: '280px' }}>
+                <div className="product-grid grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                   {items.map((p) => (
                     <ProductCard key={p.id} p={p} placeholder={placeholder} />
                   ))}

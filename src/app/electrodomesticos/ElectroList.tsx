@@ -21,6 +21,52 @@ type Product = {
   hasDefect: boolean;
 };
 
+// ── Configuración de filtros por subcategoría ─────────────────────────────
+type AttrConfig = { label: string; extract: (name: string) => string | null };
+
+const ATTR_CONFIG: Record<string, AttrConfig> = {
+  lavadora: {
+    label: 'Capacidad',
+    extract: (name) => {
+      const m = name.match(/(\d+)\s*kg/i);
+      return m ? `${m[1]} kg` : null;
+    },
+  },
+  lavavajillas: {
+    label: 'Cubiertos',
+    extract: (name) => {
+      const m = name.match(/(\d+)\s*cubiertos?/i);
+      return m ? `${m[1]} cubiertos` : null;
+    },
+  },
+  congelador: {
+    label: 'Capacidad',
+    extract: (name) => {
+      const m = name.match(/(\d+)\s*[lL](?:\b|$)/);
+      if (m) return `${m[1]} L`;
+      if (/arc[oó]n/i.test(name)) return 'Arcón';
+      if (/vertical/i.test(name)) return 'Vertical';
+      return null;
+    },
+  },
+};
+
+function getAttrConfig(subcategory: string): AttrConfig | null {
+  const key = subcategory
+    .normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim();
+  return ATTR_CONFIG[key] ?? null;
+}
+
+function getAttrValues(config: AttrConfig, items: Product[]): string[] {
+  const vals = new Set<string>();
+  items.forEach(p => { const v = config.extract(p.name); if (v) vals.add(v); });
+  return [...vals].sort((a, b) => {
+    const na = parseFloat(a), nb = parseFloat(b);
+    return isNaN(na) || isNaN(nb) ? a.localeCompare(b) : na - nb;
+  });
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 export function ElectroList() {
   const searchParams = useSearchParams();
   const subcategoryParam = searchParams.get('subcategory') || '';
@@ -29,27 +75,27 @@ export function ElectroList() {
   const [filteredItems, setFilteredItems] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('Todos');
+  const [selectedAttr, setSelectedAttr] = useState<string>('');
 
   const normalizeForCompare = (str: string) =>
     str.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim();
 
-  // Sincroniza el filtro con el parámetro de la URL (?subcategory=lavadora)
   const normalizeSubcategorySlug = (slug: string) => {
     const candidate = SUBCATEGORY_NAMES[slug.toLowerCase()];
     if (candidate) return candidate;
     const decoded = decodeURIComponent(slug || '').replace(/-/g, ' ');
-    return decoded
-      .trim()
-      .split(' ')
-      .filter(Boolean)
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+    return decoded.trim().split(' ').filter(Boolean)
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
   };
 
   useEffect(() => {
     if (!subcategoryParam) { setSelectedCategory('Todos'); return; }
     setSelectedCategory(normalizeSubcategorySlug(subcategoryParam));
   }, [subcategoryParam]);
+
+  // Reset atributo al cambiar subcategoría
+  useEffect(() => { setSelectedAttr(''); }, [selectedCategory]);
+
   const [sortBy, setSortBy] = useState<string>('default');
   const [loading, setLoading] = useState(true);
 
@@ -103,13 +149,17 @@ export function ElectroList() {
         return normalizeForCompare(label) === normalizeForCompare(selectedCategory);
       });
     }
+    if (selectedAttr) {
+      const config = getAttrConfig(selectedCategory);
+      if (config) updated = updated.filter(p => config.extract(p.name) === selectedAttr);
+    }
     if (sortBy === 'price-asc') updated.sort((a, b) => a.price - b.price);
     else if (sortBy === 'price-desc') updated.sort((a, b) => b.price - a.price);
     else if (sortBy === 'name-asc') updated.sort((a, b) => a.name.localeCompare(b.name));
     else if (sortBy === 'name-desc') updated.sort((a, b) => b.name.localeCompare(a.name));
     updated.sort((a, b) => (a.stock === 0 ? 1 : 0) - (b.stock === 0 ? 1 : 0));
     setFilteredItems(updated);
-  }, [selectedCategory, sortBy, items]);
+  }, [selectedCategory, selectedAttr, sortBy, items]);
 
   const countFor = (cat: string) => {
     if (cat === 'Todos') return items.length;
@@ -119,6 +169,12 @@ export function ElectroList() {
   if (loading) return <p className="opacity-70 py-10 text-center">Cargando productos…</p>;
 
   const matchedCategory = selectedCategory !== 'Todos' ? selectedCategory : null;
+  const attrConfig = getAttrConfig(selectedCategory);
+  // Items ya filtrados por subcategoría (sin aplicar atributo) para calcular opciones
+  const itemsInCategory = selectedCategory === 'Todos'
+    ? items
+    : items.filter(p => normalizeForCompare(p.subcategoria || p.category) === normalizeForCompare(selectedCategory));
+  const attrValues = attrConfig ? getAttrValues(attrConfig, itemsInCategory) : [];
 
   return (
     <>
@@ -135,6 +191,8 @@ export function ElectroList() {
           <div className="px-4 py-3 border-b border-neutral-100">
             <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Filtrar</span>
           </div>
+
+          {/* Categorías */}
           <ul className="py-2">
             {categories.map((cat) => {
               const count = countFor(cat);
@@ -157,19 +215,53 @@ export function ElectroList() {
               );
             })}
           </ul>
+
+          {/* Filtros por atributo (sidebar desktop) */}
+          {attrConfig && attrValues.length > 1 && (
+            <div className="border-t border-neutral-100">
+              <div className="px-4 py-3 border-b border-neutral-100">
+                <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">{attrConfig.label}</span>
+              </div>
+              <ul className="py-2">
+                <li>
+                  <button
+                    onClick={() => setSelectedAttr('')}
+                    className={`w-full flex items-center px-4 py-2 text-sm transition-colors ${selectedAttr === ''
+                      ? 'bg-orange-50 text-orange-700 font-semibold border-l-2 border-orange-500'
+                      : 'text-neutral-700 hover:bg-neutral-50'}`}
+                  >
+                    Todos
+                  </button>
+                </li>
+                {attrValues.map(val => (
+                  <li key={val}>
+                    <button
+                      onClick={() => setSelectedAttr(val === selectedAttr ? '' : val)}
+                      className={`w-full flex items-center px-4 py-2 text-sm transition-colors ${selectedAttr === val
+                        ? 'bg-orange-50 text-orange-700 font-semibold border-l-2 border-orange-500'
+                        : 'text-neutral-700 hover:bg-neutral-50'}`}
+                    >
+                      {val}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </aside>
 
         {/* Contenido principal */}
         <div className="flex-1 min-w-0">
 
           {/* Barra superior */}
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-5 bg-white rounded-xl border border-neutral-200 px-4 py-3">
-            <div className="flex lg:hidden flex-wrap gap-1.5">
+          <div className="mb-5 bg-white rounded-xl border border-neutral-200 px-3 sm:px-4 py-3 flex flex-col gap-2">
+            {/* Filtros subcategoría móvil */}
+            <div className="flex lg:hidden overflow-x-auto gap-1.5 scrollbar-none pb-0.5">
               {categories.map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
-                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${selectedCategory === cat
+                  className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-all ${selectedCategory === cat
                     ? 'bg-orange-100 text-orange-700 ring-1 ring-orange-400'
                     : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
                     }`}
@@ -179,28 +271,49 @@ export function ElectroList() {
               ))}
             </div>
 
-            <p className="hidden lg:block text-sm text-neutral-500">
-              <span className="font-semibold text-neutral-800">{filteredItems.length}</span> productos
-            </p>
+            {/* Filtros por atributo móvil */}
+            {attrConfig && attrValues.length > 1 && (
+              <div className="flex lg:hidden overflow-x-auto gap-1.5 scrollbar-none pb-0.5">
+                <span className="shrink-0 text-[10px] font-semibold text-neutral-400 uppercase self-center pr-1">{attrConfig.label}:</span>
+                {attrValues.map(val => (
+                  <button
+                    key={val}
+                    onClick={() => setSelectedAttr(val === selectedAttr ? '' : val)}
+                    className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-all ${selectedAttr === val
+                      ? 'bg-orange-100 text-orange-700 ring-1 ring-orange-400'
+                      : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                      }`}
+                  >
+                    {val}
+                  </button>
+                ))}
+              </div>
+            )}
 
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="ml-auto rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-orange-400"
-            >
-              <option value="default">Ordenar por…</option>
-              <option value="price-asc">Precio: menor a mayor</option>
-              <option value="price-desc">Precio: mayor a menor</option>
-              <option value="name-asc">Nombre: A–Z</option>
-              <option value="name-desc">Nombre: Z–A</option>
-            </select>
+            {/* Conteo + ordenar */}
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm text-neutral-500">
+                <span className="font-semibold text-neutral-800">{filteredItems.length}</span> productos
+              </p>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="rounded-lg border border-neutral-200 bg-neutral-50 px-2 sm:px-3 py-1.5 text-xs sm:text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-orange-400"
+              >
+                <option value="default">Ordenar…</option>
+                <option value="price-asc">Precio ↑</option>
+                <option value="price-desc">Precio ↓</option>
+                <option value="name-asc">A–Z</option>
+                <option value="name-desc">Z–A</option>
+              </select>
+            </div>
           </div>
 
           {/* Lista de productos */}
           {filteredItems.length === 0 ? (
             <p className="text-center opacity-70 py-16">No hay productos en esta categoría.</p>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="product-grid grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
               {filteredItems.map((p) => {
                 const hasOffer = p.offerPrice != null && p.offerPrice > 0 && p.offerPrice < p.price;
                 const discount = hasOffer ? Math.round(((p.price - p.offerPrice!) / p.price) * 100) : 0;
@@ -219,8 +332,8 @@ export function ElectroList() {
                       </div>
                     )}
 
-                    {/* Imagen: 160px fijos */}
-                    <div className="relative bg-neutral-50 w-full shrink-0 overflow-hidden" style={{ height: '160px' }}>
+                    {/* Imagen */}
+                    <div className="card-img">
                       <Image
                         src={p.fotos[0] || '/placeholders/electrodomesticos.svg'}
                         alt={p.name}
@@ -239,8 +352,8 @@ export function ElectroList() {
                       ) : null}
                     </div>
 
-                    {/* Info: ocupa el resto */}
-                    <div className="p-3 flex flex-col" style={{ height: '120px', overflow: 'hidden' }}>
+                    {/* Info */}
+                    <div className="card-info p-3 flex flex-col">
                       <p className="text-[10px] text-neutral-400 uppercase tracking-wide truncate">
                         {p.subcategoria || p.category}
                       </p>

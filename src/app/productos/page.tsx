@@ -82,10 +82,10 @@ export default function ProductosPage() {
 
   const filtered = selectedCol === 'todos' ? products : products.filter(p => p.coleccion === selectedCol);
 
-  if (loading) return <div className="max-w-6xl mx-auto px-4 py-10 opacity-70">Cargando productos…</div>;
+  if (loading) return <div className="max-w-screen-2xl mx-auto px-6 py-10 opacity-70">Cargando productos…</div>;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="max-w-screen-2xl mx-auto px-3 sm:px-6 py-6 sm:py-8">
       <div className="mb-6">
         <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Todos los productos</h1>
         <p className="mt-1 text-sm text-neutral-500">{products.length} productos en catálogo</p>
@@ -117,7 +117,7 @@ export default function ProductosPage() {
       {filtered.length === 0 ? (
         <p className="text-center opacity-70 py-16">No hay productos disponibles.</p>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4" style={{ gridAutoRows: '280px' }}>
+        <div className="product-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
           {filtered.map((p) => {
             const hasOffer = p.offerPrice != null && p.offerPrice > 0 && p.offerPrice < p.price;
             const discount = hasOffer ? Math.round(((p.price - p.offerPrice!) / p.price) * 100) : 0;
@@ -137,7 +137,7 @@ export default function ProductosPage() {
                 )}
 
                 {/* Imagen */}
-                <div className="relative bg-neutral-50 w-full shrink-0 overflow-hidden" style={{ height: '160px' }}>
+                <div className="card-img">
                   <Image
                     src={p.fotos[0] || PLACEHOLDER[p.coleccion]}
                     alt={p.name}
@@ -157,7 +157,7 @@ export default function ProductosPage() {
                 </div>
 
                 {/* Info */}
-                <div className="p-3 flex flex-col" style={{ height: '120px', overflow: 'hidden' }}>
+                <div className="card-info p-3 flex flex-col">
                   <p className="text-[10px] text-neutral-400 uppercase tracking-wide truncate">
                     {p.subcategoria || COLECCION_LABEL[p.coleccion]}
                   </p>

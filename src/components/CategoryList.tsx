@@ -163,15 +163,15 @@ export function CategoryList({ collection: collectionName, placeholder, detailBa
       {/* Contenido principal */}
       <div className="flex-1 min-w-0">
 
-        {/* Barra superior: filtros móvil + sort + conteo */}
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-5 bg-white rounded-xl border border-neutral-200 px-4 py-3">
-          {/* Filtros categoría (solo móvil) */}
-          <div className="flex lg:hidden flex-wrap gap-1.5">
+        {/* Barra superior */}
+        <div className="mb-5 bg-white rounded-xl border border-neutral-200 px-3 sm:px-4 py-3 flex flex-col gap-2">
+          {/* Filtros móvil — scroll horizontal */}
+          <div className="flex lg:hidden overflow-x-auto gap-1.5 scrollbar-none pb-0.5">
             {categories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${selectedCategory === cat
+                className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-all ${selectedCategory === cat
                   ? 'bg-orange-100 text-orange-700 ring-1 ring-orange-400'
                   : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
                   }`}
@@ -181,28 +181,30 @@ export function CategoryList({ collection: collectionName, placeholder, detailBa
             ))}
           </div>
 
-          <p className="hidden lg:block text-sm text-neutral-500">
-            <span className="font-semibold text-neutral-800">{filteredItems.length}</span> productos
-          </p>
-
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="ml-auto rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-orange-400"
-          >
-            <option value="default">Ordenar por…</option>
-            <option value="price-asc">Precio: menor a mayor</option>
-            <option value="price-desc">Precio: mayor a menor</option>
-            <option value="name-asc">Nombre: A–Z</option>
-            <option value="name-desc">Nombre: Z–A</option>
-          </select>
+          {/* Conteo + ordenar */}
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-sm text-neutral-500">
+              <span className="font-semibold text-neutral-800">{filteredItems.length}</span> productos
+            </p>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="rounded-lg border border-neutral-200 bg-neutral-50 px-2 sm:px-3 py-1.5 text-xs sm:text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-orange-400"
+            >
+              <option value="default">Ordenar…</option>
+              <option value="price-asc">Precio ↑</option>
+              <option value="price-desc">Precio ↓</option>
+              <option value="name-asc">A–Z</option>
+              <option value="name-desc">Z–A</option>
+            </select>
+          </div>
         </div>
 
         {/* Lista de productos */}
         {filteredItems.length === 0 ? (
           <p className="text-center opacity-70 py-16">No hay productos en esta categoría.</p>
         ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4" style={{ gridAutoRows: '280px' }}>
+          <div className="product-grid grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
             {filteredItems.map((p) => {
               const hasOffer = p.offerPrice != null && p.offerPrice > 0 && p.price != null && p.offerPrice < p.price;
               const discount = hasOffer ? Math.round(((p.price! - p.offerPrice!) / p.price!) * 100) : 0;
@@ -222,7 +224,7 @@ export function CategoryList({ collection: collectionName, placeholder, detailBa
                   )}
 
                   {/* Imagen */}
-                  <div className="relative bg-neutral-50 w-full shrink-0 overflow-hidden" style={{ height: '160px' }}>
+                  <div className="card-img">
                     <Image
                       src={p.fotos[0] || placeholder}
                       alt={p.name}
@@ -242,7 +244,7 @@ export function CategoryList({ collection: collectionName, placeholder, detailBa
                   </div>
 
                   {/* Info */}
-                  <div className="p-3 flex flex-col" style={{ height: '120px', overflow: 'hidden' }}>
+                  <div className="card-info p-3 flex flex-col">
                     <p className="text-[10px] text-neutral-400 uppercase tracking-wide truncate">{p.subcategoria || p.category}</p>
                     <h3
                       className="mt-0.5 text-sm font-semibold text-neutral-900 group-hover:text-orange-600 transition-colors leading-snug"

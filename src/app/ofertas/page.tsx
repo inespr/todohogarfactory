@@ -80,10 +80,10 @@ export default function OfertasPage() {
     fetchOfertas();
   }, []);
 
-  if (loading) return <div className="max-w-6xl mx-auto px-4 py-10 opacity-70">Cargando ofertas…</div>;
+  if (loading) return <div className="max-w-6xl mx-auto px-6 py-10 opacity-70">Cargando ofertas…</div>;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="max-w-6xl mx-auto px-3 sm:px-6 py-6 sm:py-8">
       {/* Breadcrumb */}
       <nav className="flex flex-wrap items-center gap-1.5 text-sm text-neutral-400 mb-6">
         <Link href="/" className="hover:text-neutral-700 transition-colors">Inicio</Link>
@@ -99,7 +99,7 @@ export default function OfertasPage() {
       {products.length === 0 ? (
         <p className="text-center opacity-70 py-16">No hay productos en oferta en este momento.</p>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4" style={{ gridAutoRows: '280px' }}>
+        <div className="product-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
           {products.map((p) => {
             const hasOffer = p.offerPrice != null && p.offerPrice > 0 && p.offerPrice < p.price;
             const descuento = hasOffer ? Math.round(((p.price - p.offerPrice!) / p.price) * 100) : null;
@@ -120,7 +120,7 @@ export default function OfertasPage() {
                 )}
 
                 {/* Imagen */}
-                <div className="relative bg-neutral-50 w-full shrink-0 overflow-hidden" style={{ height: '160px' }}>
+                <div className="card-img">
                   <Image
                     src={p.fotos[0] || PLACEHOLDER[p.coleccion]}
                     alt={p.name}
@@ -140,7 +140,7 @@ export default function OfertasPage() {
                 </div>
 
                 {/* Info */}
-                <div className="p-3 flex flex-col" style={{ height: '120px', overflow: 'hidden' }}>
+                <div className="card-info p-3 flex flex-col">
                   <p className="text-[10px] text-neutral-400 uppercase tracking-wide truncate">
                     {p.subcategoria || p.category || COLECCION_LABEL[p.coleccion]}
                   </p>

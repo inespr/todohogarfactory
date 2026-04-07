@@ -27,3 +27,35 @@ body {
 .pageShell {
   background: var(--background);
 }
+
+/* Cards de producto — alturas responsivas */
+.card-img {
+  height: 130px;
+  position: relative;
+  background: #fafafa;
+  width: 100%;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.card-info {
+  height: 100px;
+  overflow: hidden;
+}
+.product-grid {
+  grid-auto-rows: 230px;
+}
+
+@media (min-width: 640px) {
+  .card-img  { height: 160px; }
+  .card-info { height: 120px; }
+  .product-grid { grid-auto-rows: 280px; }
+}
+
+/* Scrollbar oculta para filtros horizontales */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
