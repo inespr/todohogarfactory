@@ -14,6 +14,7 @@ export const translations = {
       closeMenu: 'Cerrar menú',
       closeSubmenu: 'Cerrar subcategorías',
       openSubmenu: 'Abrir subcategorías',
+      shippingBanner: '🚚 Envío disponible solo en la provincia de Huelva',
     },
     common: {
       todos: 'Todos',
@@ -64,6 +65,7 @@ export const translations = {
       closeMenu: 'Close menu',
       closeSubmenu: 'Close subcategories',
       openSubmenu: 'Open subcategories',
+      shippingBanner: '🚚 Delivery available in Huelva province only',
     },
     common: {
       todos: 'All',
