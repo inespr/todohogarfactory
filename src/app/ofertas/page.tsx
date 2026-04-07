@@ -99,86 +99,69 @@ export default function OfertasPage() {
       {products.length === 0 ? (
         <p className="text-center opacity-70 py-16">No hay productos en oferta en este momento.</p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4" style={{ gridAutoRows: '280px' }}>
           {products.map((p) => {
-            const precioFormateado = p.price > 0
-              ? (p.price % 1 === 0 ? `${p.price} €` : p.price.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €')
-              : null;
-            const ofertaFormateado = p.offerPrice
-              ? (p.offerPrice % 1 === 0 ? `${p.offerPrice} €` : p.offerPrice.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €')
-              : null;
-            const descuento = p.offerPrice && p.price > 0 && p.offerPrice < p.price
-              ? Math.round(((p.price - p.offerPrice) / p.price) * 100)
-              : null;
+            const hasOffer = p.offerPrice != null && p.offerPrice > 0 && p.offerPrice < p.price;
+            const descuento = hasOffer ? Math.round(((p.price - p.offerPrice!) / p.price) * 100) : null;
+            const formatPrice = (n: number) =>
+              n % 1 === 0 ? `${n} €` : n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
 
             return (
               <Link
                 key={`${p.coleccion}-${p.id}`}
                 href={`/${p.coleccion}/${p.id}`}
-                className="group flex flex-row bg-white rounded-xl border border-neutral-200 overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
-                style={{ height: '160px' }}
+                className="group relative flex flex-col bg-white rounded-xl border border-neutral-200 overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
               >
+                {/* Badge porcentaje */}
+                {descuento && p.stock !== 0 && (
+                  <div className="absolute top-2 left-2 z-20 text-white text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: '#f97316' }}>
+                    -{descuento}%
+                  </div>
+                )}
+
                 {/* Imagen */}
-                <div className="relative bg-neutral-50 shrink-0 overflow-hidden" style={{ width: '150px', minWidth: '150px' }}>
+                <div className="relative bg-neutral-50 w-full shrink-0 overflow-hidden" style={{ height: '160px' }}>
                   <Image
                     src={p.fotos[0] || PLACEHOLDER[p.coleccion]}
                     alt={p.name}
                     fill
-                    className="object-contain p-3"
-                    sizes="150px"
+                    className={`object-cover transition-transform duration-300 group-hover:scale-105 ${p.stock === 0 ? 'grayscale opacity-60' : ''}`}
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                     unoptimized
                     onError={(e) => { (e.target as HTMLImageElement).src = PLACEHOLDER[p.coleccion]; }}
                   />
-                  {descuento && (
-                    <div className="absolute top-2 left-2 text-white text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: '#f97316' }}>
-                      -{descuento}%
-                    </div>
-                  )}
-                  {p.stock === 0 && (
-                    <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
-                      <span className="text-xs font-semibold text-red-500 bg-white px-2 py-1 rounded-full shadow-sm border border-red-100">
-                        Agotado
+                  {p.stock === 0 ? (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                      <span className="bg-red-600 text-white text-xs font-bold uppercase tracking-widest px-3 py-1 rounded">
+                        Vendido
                       </span>
                     </div>
-                  )}
+                  ) : null}
                 </div>
 
                 {/* Info */}
-                <div className="p-3 flex flex-col justify-between flex-1 overflow-hidden">
-                  <div>
-                    {/* Etiquetas */}
-                    <div className="flex flex-wrap gap-1 mb-1">
-                      <span className="text-[10px] font-semibold uppercase tracking-wide text-neutral-600 bg-neutral-100 px-2 py-0.5 rounded-full">
-                        {COLECCION_LABEL[p.coleccion]}
-                      </span>
-                      {(p.subcategoria || p.category) && p.subcategoria !== p.category && (
-                        <span className="text-[10px] text-neutral-500 bg-neutral-100 px-2 py-0.5 rounded-full">
-                          {p.subcategoria || p.category}
-                        </span>
+                <div className="p-3 flex flex-col" style={{ height: '120px', overflow: 'hidden' }}>
+                  <p className="text-[10px] text-neutral-400 uppercase tracking-wide truncate">
+                    {p.subcategoria || p.category || COLECCION_LABEL[p.coleccion]}
+                  </p>
+                  <h3
+                    className="mt-0.5 text-sm font-semibold text-neutral-900 group-hover:text-orange-600 transition-colors leading-snug"
+                    style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
+                  >
+                    {p.name}
+                  </h3>
+                  {p.price > 0 && (
+                    <div className="flex flex-col mt-auto">
+                      {hasOffer ? (
+                        <>
+                          <span className="text-base font-bold text-red-600 leading-none">{formatPrice(p.offerPrice!)}</span>
+                          <span className="text-xs text-neutral-400 line-through">Antes: {formatPrice(p.price)}</span>
+                        </>
+                      ) : (
+                        <span className="text-sm font-bold text-neutral-900">{formatPrice(p.price)}</span>
                       )}
-                      <span
-                        className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${p.stock === 0 ? 'bg-red-50 text-red-600' : 'text-white'}`}
-                        style={p.stock > 0 ? { backgroundColor: '#16a34a' } : {}}
-                      >
-                        {p.stock > 0 ? '● Disponible' : '● Agotado'}
-                      </span>
                     </div>
-                    <h3 className="text-sm font-semibold text-neutral-900 group-hover:text-orange-600 transition-colors line-clamp-2 leading-snug">
-                      {p.name}
-                    </h3>
-                  </div>
-                  {/* Precio */}
-                  <div className="flex items-center gap-2 flex-wrap">
-
-                    {descuento && precioFormateado && (
-                      <span className="text-xs text-neutral-400 line-through">{precioFormateado}</span>
-                    )}
-                    {(ofertaFormateado || precioFormateado) && (
-                      <span className="text-base font-bold text-red-600">
-                        {ofertaFormateado || precioFormateado}
-                      </span>
-                    )}
-                  </div>
+                  )}
                 </div>
               </Link>
             );

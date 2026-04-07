@@ -200,70 +200,77 @@ export function ElectroList() {
           {filteredItems.length === 0 ? (
             <p className="text-center opacity-70 py-16">No hay productos en esta categoría.</p>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {filteredItems.map((p) => (
-                <Link
-                  key={p.id}
-                  href={`/electrodomesticos/${p.id}`}
-                  className="group flex flex-row bg-white rounded-xl border border-neutral-200 overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
-                  style={{ height: '160px' }}
-                >
-                  {/* Imagen */}
-                  <div className="relative bg-neutral-50 shrink-0 overflow-hidden" style={{ width: '150px', minWidth: '150px' }}>
-                    <Image
-                      src={p.fotos[0] || '/placeholders/electrodomesticos.svg'}
-                      alt={p.name}
-                      fill
-                      className={`object-contain p-3 transition-all${p.stock === 0 ? ' grayscale opacity-50' : ''}`}
-                      sizes="150px"
-                      unoptimized
-                      onError={(e) => { (e.target as HTMLImageElement).src = '/placeholders/electrodomesticos.svg'; }}
-                    />
-                    {p.offerPrice && p.offerPrice < p.price && p.stock !== 0 && (
-                      <div className="absolute top-2 left-2 text-white text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: '#f97316' }}>
-                        -{Math.round(((p.price - p.offerPrice) / p.price) * 100)}%
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {filteredItems.map((p) => {
+                const hasOffer = p.offerPrice != null && p.offerPrice > 0 && p.offerPrice < p.price;
+                const discount = hasOffer ? Math.round(((p.price - p.offerPrice!) / p.price) * 100) : 0;
+                const formatPrice = (n: number) =>
+                  n % 1 === 0 ? `${n} €` : n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+                return (
+                  <Link
+                    key={p.id}
+                    href={`/electrodomesticos/${p.id}`}
+                    className="group relative flex flex-col bg-white rounded-xl border border-neutral-200 overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
+                  >
+                    {/* Badge porcentaje */}
+                    {hasOffer && p.stock !== 0 && (
+                      <div className="absolute top-2 left-2 z-20 text-white text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: '#f97316' }}>
+                        -{discount}%
                       </div>
                     )}
-                    {p.stock === 0 && (
-                      <div className="absolute inset-x-0 bottom-0 bg-red-600 text-white text-[11px] font-black uppercase tracking-widest text-center py-1.5">
-                        VENDIDO
-                      </div>
-                    )}
-                  </div>
 
-                  {/* Info */}
-                  <div className="p-3 flex flex-col justify-between flex-1 overflow-hidden">
-                    <div>
-                      <p className="text-[10px] text-neutral-400 uppercase tracking-wide truncate">{p.subcategoria || p.category}</p>
-                      <h3 className="mt-0.5 text-sm font-semibold text-neutral-900 group-hover:text-orange-600 transition-colors line-clamp-2 leading-snug">
+                    {/* Imagen: 160px fijos */}
+                    <div className="relative bg-neutral-50 w-full shrink-0 overflow-hidden" style={{ height: '160px' }}>
+                      <Image
+                        src={p.fotos[0] || '/placeholders/electrodomesticos.svg'}
+                        alt={p.name}
+                        fill
+                        className={`object-cover transition-transform duration-300 group-hover:scale-105 ${p.stock === 0 ? 'grayscale opacity-60' : ''}`}
+                        sizes="(max-width: 768px) 50vw, 33vw"
+                        unoptimized
+                        onError={(e) => { (e.target as HTMLImageElement).src = '/placeholders/electrodomesticos.svg'; }}
+                      />
+                      {p.stock === 0 ? (
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                          <span className="bg-red-600 text-white text-xs font-bold uppercase tracking-widest px-3 py-1 rounded">
+                            Vendido
+                          </span>
+                        </div>
+                      ) : null}
+                    </div>
+
+                    {/* Info: ocupa el resto */}
+                    <div className="p-3 flex flex-col" style={{ height: '120px', overflow: 'hidden' }}>
+                      <p className="text-[10px] text-neutral-400 uppercase tracking-wide truncate">
+                        {p.subcategoria || p.category}
+                      </p>
+                      <h3
+                        className="mt-0.5 text-sm font-semibold text-neutral-900 group-hover:text-orange-600 transition-colors leading-snug"
+                        style={{
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                        }}
+                      >
                         {p.name}
                       </h3>
-                      <p className="text-xs text-neutral-600 mt-1 line-clamp-2">{p.observaciones}</p>
+                      {p.price > 0 && (
+                        <div className="flex flex-col mt-auto">
+                          {hasOffer ? (
+                            <>
+                              <span className="text-base font-bold text-red-600 leading-none">{formatPrice(p.offerPrice!)}</span>
+                              <span className="text-xs text-neutral-400 line-through">Antes: {formatPrice(p.price)}</span>
+                            </>
+                          ) : (
+                            <span className="text-sm font-bold text-neutral-900">{formatPrice(p.price)}</span>
+                          )}
+                        </div>
+                      )}
                     </div>
-                    {p.price > 0 && (
-                      <div className="mt-1 flex flex-col">
-                        {p.offerPrice && p.offerPrice < p.price ? (
-                          <>
-                            {/* Precio oferta grande */}
-                            <span className="text-base font-bold text-red-600 leading-none">
-                              {p.offerPrice.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
-                            </span>
-
-                            {/* Precio original tachado */}
-                            <span className="text-xs text-neutral-400 line-through">
-                              Antes: {p.price.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
-                            </span>
-                          </>
-                        ) : (
-                          <span className="text-sm font-bold text-neutral-900">
-                            {p.price.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                );
+              })}
             </div>
           )}
         </div>

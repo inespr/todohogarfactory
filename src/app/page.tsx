@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { collection, getDocs, query, where, limit } from 'firebase/firestore';
+import { collection, getDocs, query, limit } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
 type Product = {
@@ -36,47 +36,46 @@ function ProductCard({ p, placeholder }: { p: Product; placeholder: string }) {
   return (
     <Link
       href={`/${p.coleccion}/${p.id}`}
-      className="group flex flex-row bg-white rounded-xl border border-neutral-200 overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
-      style={{ height: '160px' }}
+      className="group relative flex flex-col bg-white rounded-xl border border-neutral-200 overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
     >
+      {/* Badge porcentaje */}
+      {descuento && p.stock !== 0 && (
+        <div className="absolute top-2 left-2 z-20 text-white text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: '#f97316' }}>
+          -{descuento}%
+        </div>
+      )}
+
       {/* Imagen */}
-      <div className="relative bg-neutral-50 shrink-0 overflow-hidden" style={{ width: '150px', minWidth: '150px' }}>
+      <div className="relative bg-neutral-50 w-full shrink-0 overflow-hidden" style={{ height: '160px' }}>
         <Image
           src={p.fotos[0] || placeholder}
           alt={p.name}
           fill
-          className="object-contain p-3"
-          sizes="150px"
+          className={`object-cover transition-transform duration-300 group-hover:scale-105 ${p.stock === 0 ? 'grayscale opacity-60' : ''}`}
+          sizes="(max-width: 640px) 50vw, 25vw"
           unoptimized
           onError={(e) => { (e.target as HTMLImageElement).src = placeholder; }}
         />
-        {descuento && (
-          <div className="absolute top-2 left-2 text-white text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: '#f97316' }}>
-            -{descuento}%
-          </div>
-        )}
-        {p.stock === 0 && (
-          <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
-            <span className="text-xs font-semibold text-red-500 bg-white px-2 py-1 rounded-full shadow-sm border border-red-100">
-              Agotado
+        {p.stock === 0 ? (
+          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+            <span className="bg-red-600 text-white text-xs font-bold uppercase tracking-widest px-3 py-1 rounded">
+              Vendido
             </span>
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* Info */}
-      <div className="p-3 flex flex-col justify-between flex-1 overflow-hidden">
-        <div>
-          <p className="text-[10px] text-neutral-400 uppercase tracking-wide truncate">{p.subcategoria || p.category}</p>
-          <h3 className="mt-0.5 text-sm font-semibold text-neutral-900 group-hover:text-orange-600 transition-colors line-clamp-2 leading-snug">
-            {p.name}
-          </h3>
-          {p.observaciones && (
-            <p className="text-xs text-neutral-500 mt-0.5 line-clamp-1">{p.observaciones}</p>
-          )}
-        </div>
+      <div className="p-3 flex flex-col" style={{ height: '120px', overflow: 'hidden' }}>
+        <p className="text-[10px] text-neutral-400 uppercase tracking-wide truncate">{p.subcategoria || p.category}</p>
+        <h3
+          className="mt-0.5 text-sm font-semibold text-neutral-900 group-hover:text-orange-600 transition-colors leading-snug"
+          style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
+        >
+          {p.name}
+        </h3>
         {p.price > 0 && (
-          <div className="mt-1 flex flex-col">
+          <div className="flex flex-col mt-auto">
             {hasOffer ? (
               <>
                 <span className="text-base font-bold text-red-600 leading-none">{formatPrice(p.offerPrice!)}</span>
@@ -184,7 +183,7 @@ export default function Home() {
             {loading ? (
               <p className="text-center opacity-60 py-10">Cargando…</p>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4" style={{ gridAutoRows: '280px' }}>
                 {ofertas.map((p) => (
                   <ProductCard
                     key={`${p.coleccion}-${p.id}`}
@@ -207,7 +206,7 @@ export default function Home() {
               {loading ? (
                 <p className="text-center opacity-60 py-10">Cargando…</p>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4" style={{ gridAutoRows: '280px' }}>
                   {items.map((p) => (
                     <ProductCard key={p.id} p={p} placeholder={placeholder} />
                   ))}
