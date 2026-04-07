@@ -280,6 +280,11 @@ export function Navbar() {
 
       <div className={styles.searchContainerMobile}>{searchForm}</div>
 
+      {/* Banner de envío */}
+      <div className={styles.shippingBanner}>
+        🚚 Envío disponible solo en la provincia de Huelva
+      </div>
+
       {mobileMenuOpen && (
         <button
           type="button"
