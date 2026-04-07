@@ -117,7 +117,7 @@ export default function ProductosPage() {
       {filtered.length === 0 ? (
         <p className="text-center opacity-70 py-16">No hay productos disponibles.</p>
       ) : (
-        <div className="product-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="product-grid">
           {filtered.map((p) => {
             const hasOffer = p.offerPrice != null && p.offerPrice > 0 && p.offerPrice < p.price;
             const discount = hasOffer ? Math.round(((p.price - p.offerPrice!) / p.price) * 100) : 0;

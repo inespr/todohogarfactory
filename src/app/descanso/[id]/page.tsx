@@ -219,6 +219,7 @@ export default function DescansoDetailPage() {
               <div className="flex flex-col text-sm text-neutral-500 gap-1">
                 <span className="underline cursor-pointer">IVA incl.</span>
                 <span className="underline cursor-pointer text-blue-600">Envío disponible</span>
+                <span className="text-emerald-700 font-semibold">✓ Garantía 3 años en todos nuestros productos</span>
               </div>
 
               {/* Botones WhatsApp y Compartir */}

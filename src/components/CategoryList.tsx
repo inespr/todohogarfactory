@@ -5,8 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { SUBCATEGORY_NAMES } from '@/lib/products';
-import Image from 'next/image';
-import Link from 'next/link';
+import { ProductCard } from '@/components/ProductCard';
 
 type CategoryItem = {
   id: string;
@@ -132,7 +131,7 @@ export function CategoryList({ collection: collectionName, placeholder, detailBa
     <div className="flex gap-6 items-start">
 
       {/* Sidebar */}
-      <aside className="hidden lg:flex flex-col w-52 shrink-0 sticky top-24 bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden">
+      <aside className="hidden lg:flex flex-col w-52 shrink-0 sticky top-[90px] bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden">
         <div className="px-4 py-3 border-b border-neutral-100">
           <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Categorías</span>
         </div>
@@ -166,15 +165,15 @@ export function CategoryList({ collection: collectionName, placeholder, detailBa
         {/* Barra superior */}
         <div className="mb-5 bg-white rounded-xl border border-neutral-200 px-3 sm:px-4 py-3 flex flex-col gap-2">
           {/* Filtros móvil — scroll horizontal */}
-          <div className="flex lg:hidden overflow-x-auto gap-1.5 scrollbar-none pb-0.5">
+          <div className="flex lg:hidden overflow-x-auto gap-2 scrollbar-none -mx-3 sm:-mx-4 px-3 sm:px-4 pb-1">
             {categories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-all ${selectedCategory === cat
-                  ? 'bg-orange-100 text-orange-700 ring-1 ring-orange-400'
-                  : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-                  }`}
+                className="shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all"
+                style={selectedCategory === cat
+                  ? { backgroundColor: '#f97316', color: '#ffffff' }
+                  : { backgroundColor: '#f3f4f6', color: '#4b5563' }}
               >
                 {cat}
               </button>
@@ -204,70 +203,20 @@ export function CategoryList({ collection: collectionName, placeholder, detailBa
         {filteredItems.length === 0 ? (
           <p className="text-center opacity-70 py-16">No hay productos en esta categoría.</p>
         ) : (
-          <div className="product-grid grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-            {filteredItems.map((p) => {
-              const hasOffer = p.offerPrice != null && p.offerPrice > 0 && p.price != null && p.offerPrice < p.price;
-              const discount = hasOffer ? Math.round(((p.price! - p.offerPrice!) / p.price!) * 100) : 0;
-              const formatPrice = (n: number) =>
-                n % 1 === 0 ? `${n} €` : n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
-              return (
-                <Link
-                  key={p.id}
-                  href={`${detailBase}/${p.id}`}
-                  className="group relative flex flex-col bg-white rounded-xl border border-neutral-200 overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
-                >
-                  {/* Badge porcentaje */}
-                  {hasOffer && (p.stock ?? 0) !== 0 && (
-                    <div className="absolute top-2 left-2 z-20 text-white text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: '#f97316' }}>
-                      -{discount}%
-                    </div>
-                  )}
-
-                  {/* Imagen */}
-                  <div className="card-img">
-                    <Image
-                      src={p.fotos[0] || placeholder}
-                      alt={p.name}
-                      fill
-                      className={`object-cover transition-transform duration-300 group-hover:scale-105 ${(p.stock ?? 0) === 0 ? 'grayscale opacity-60' : ''}`}
-                      sizes="(max-width: 768px) 50vw, 33vw"
-                      unoptimized
-                      onError={(e) => { (e.target as HTMLImageElement).src = placeholder; }}
-                    />
-                    {(p.stock ?? 0) === 0 ? (
-                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                        <span className="bg-red-600 text-white text-xs font-bold uppercase tracking-widest px-3 py-1 rounded">
-                          Vendido
-                        </span>
-                      </div>
-                    ) : null}
-                  </div>
-
-                  {/* Info */}
-                  <div className="card-info p-3 flex flex-col">
-                    <p className="text-[10px] text-neutral-400 uppercase tracking-wide truncate">{p.subcategoria || p.category}</p>
-                    <h3
-                      className="mt-0.5 text-sm font-semibold text-neutral-900 group-hover:text-orange-600 transition-colors leading-snug"
-                      style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
-                    >
-                      {p.name}
-                    </h3>
-                    {(p.price ?? 0) > 0 && (
-                      <div className="flex flex-col mt-auto">
-                        {hasOffer ? (
-                          <>
-                            <span className="text-base font-bold text-red-600 leading-none">{formatPrice(p.offerPrice!)}</span>
-                            <span className="text-xs text-neutral-400 line-through">Antes: {formatPrice(p.price!)}</span>
-                          </>
-                        ) : (
-                          <span className="text-sm font-bold text-neutral-900">{formatPrice(p.price ?? 0)}</span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </Link>
-              );
-            })}
+          <div className="product-grid">
+            {filteredItems.map((p) => (
+              <ProductCard
+                key={p.id}
+                href={`${detailBase}/${p.id}`}
+                image={p.fotos[0] || ''}
+                placeholder={placeholder}
+                name={p.name}
+                subcategory={p.subcategoria || p.category}
+                price={p.price}
+                offerPrice={p.offerPrice}
+                stock={p.stock ?? 0}
+              />
+            ))}
           </div>
         )}
       </div>

@@ -4,8 +4,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import Link from 'next/link';
-import Image from 'next/image';
+import { ProductCard } from '@/components/ProductCard';
 
 type Product = {
   id: string;
@@ -80,43 +79,18 @@ function BuscarContent() {
       ) : results.length === 0 && q ? (
         <p className="text-center opacity-70 py-16">No se encontraron productos.</p>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4" style={{ gridAutoRows: '280px' }}>
+        <div className="product-grid">
           {results.map((p) => (
-            <div key={p.id} style={{ height: '280px', minHeight: '280px', maxHeight: '280px' }}>
-              <Link
-                href={`/${p.category}/${p.id}`}
-                className="group flex flex-col bg-white rounded-2xl border border-neutral-200 overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all w-full"
-                style={{ height: '280px' }}
-              >
-                <div className="relative bg-neutral-50 shrink-0 overflow-hidden" style={{ height: '160px' }}>
-                  <Image
-                    src={p.fotos[0] || getPlaceholder(p.category)}
-                    alt={p.name}
-                    fill
-                    className={`object-contain p-3 transition-all${p.stock === 0 ? ' grayscale opacity-50' : ''}`}
-                    sizes="25vw"
-                    unoptimized
-                    onError={(e) => { (e.target as HTMLImageElement).src = getPlaceholder(p.category); }}
-                  />
-                  {p.stock === 0 && (
-                    <div className="absolute inset-x-0 bottom-0 bg-red-600 text-white text-[11px] font-black uppercase tracking-widest text-center py-1.5">
-                      VENDIDO
-                    </div>
-                  )}
-                </div>
-                <div className="p-3 flex flex-col flex-1 min-w-0">
-                  <p className="text-[10px] text-neutral-400 uppercase tracking-wide truncate">{p.category}</p>
-                  <h3 className="text-sm font-semibold text-neutral-900 group-hover:text-orange-600 line-clamp-2 mt-0.5">
-                    {p.name}
-                  </h3>
-                  {p.price > 0 && (
-                    <p className="text-sm font-bold text-neutral-900 mt-auto">
-                      {p.price % 1 === 0 ? `${p.price} €` : `${p.price.toLocaleString('es-ES')} €`}
-                    </p>
-                  )}
-                </div>
-              </Link>
-            </div>
+            <ProductCard
+              key={p.id}
+              href={`/${p.category}/${p.id}`}
+              image={p.fotos[0] || ''}
+              placeholder={getPlaceholder(p.category)}
+              name={p.name}
+              subcategory={p.category}
+              price={p.price}
+              stock={p.stock}
+            />
           ))}
         </div>
       )}

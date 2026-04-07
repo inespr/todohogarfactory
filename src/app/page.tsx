@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { collection, getDocs, query, limit } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { ProductCard } from '../components/ProductCard';
 
 type Product = {
   id: string;
@@ -26,70 +26,6 @@ const CATEGORIAS = [
   { key: 'descanso', label: 'Descanso', placeholder: '/placeholders/descanso.svg', href: '/descanso' },
 ];
 
-function ProductCard({ p, placeholder }: { p: Product; placeholder: string }) {
-  const hasOffer = p.offerPrice && p.offerPrice < p.price;
-  const descuento = hasOffer ? Math.round(((p.price - p.offerPrice!) / p.price) * 100) : null;
-
-  const formatPrice = (n: number) =>
-    n % 1 === 0 ? `${n} €` : n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
-
-  return (
-    <Link
-      href={`/${p.coleccion}/${p.id}`}
-      className="group relative flex flex-col bg-white rounded-xl border border-neutral-200 overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
-    >
-      {/* Badge porcentaje */}
-      {descuento && p.stock !== 0 && (
-        <div className="absolute top-2 left-2 z-20 text-white text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: '#f97316' }}>
-          -{descuento}%
-        </div>
-      )}
-
-      {/* Imagen */}
-      <div className="card-img">
-        <Image
-          src={p.fotos[0] || placeholder}
-          alt={p.name}
-          fill
-          className={`object-cover transition-transform duration-300 group-hover:scale-105 ${p.stock === 0 ? 'grayscale opacity-60' : ''}`}
-          sizes="(max-width: 640px) 50vw, 25vw"
-          unoptimized
-          onError={(e) => { (e.target as HTMLImageElement).src = placeholder; }}
-        />
-        {p.stock === 0 ? (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <span className="bg-red-600 text-white text-xs font-bold uppercase tracking-widest px-3 py-1 rounded">
-              Vendido
-            </span>
-          </div>
-        ) : null}
-      </div>
-
-      {/* Info */}
-      <div className="card-info p-3 flex flex-col">
-        <p className="text-[10px] text-neutral-400 uppercase tracking-wide truncate">{p.subcategoria || p.category}</p>
-        <h3
-          className="mt-0.5 text-sm font-semibold text-neutral-900 group-hover:text-orange-600 transition-colors leading-snug"
-          style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
-        >
-          {p.name}
-        </h3>
-        {p.price > 0 && (
-          <div className="flex flex-col mt-auto">
-            {hasOffer ? (
-              <>
-                <span className="text-base font-bold text-red-600 leading-none">{formatPrice(p.offerPrice!)}</span>
-                <span className="text-xs text-neutral-400 line-through">Antes: {formatPrice(p.price)}</span>
-              </>
-            ) : (
-              <span className="text-sm font-bold text-neutral-900">{formatPrice(p.price)}</span>
-            )}
-          </div>
-        )}
-      </div>
-    </Link>
-  );
-}
 
 function SectionHeader({ title, subtitle, href }: { title: string; subtitle?: string; href: string }) {
   return (
@@ -183,12 +119,18 @@ export default function Home() {
             {loading ? (
               <p className="text-center opacity-60 py-10">Cargando…</p>
             ) : (
-              <div className="product-grid grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+              <div className="product-grid">
                 {ofertas.map((p) => (
                   <ProductCard
                     key={`${p.coleccion}-${p.id}`}
-                    p={p}
+                    href={`/${p.coleccion}/${p.id}`}
+                    image={p.fotos[0] || ''}
                     placeholder={CATEGORIAS.find(c => c.key === p.coleccion)?.placeholder || '/placeholders/electrodomesticos.svg'}
+                    name={p.name}
+                    subcategory={p.subcategoria || p.category}
+                    price={p.price}
+                    offerPrice={p.offerPrice}
+                    stock={p.stock}
                   />
                 ))}
               </div>
@@ -206,9 +148,19 @@ export default function Home() {
               {loading ? (
                 <p className="text-center opacity-60 py-10">Cargando…</p>
               ) : (
-                <div className="product-grid grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                <div className="product-grid">
                   {items.map((p) => (
-                    <ProductCard key={p.id} p={p} placeholder={placeholder} />
+                    <ProductCard
+                      key={p.id}
+                      href={`/${p.coleccion}/${p.id}`}
+                      image={p.fotos[0] || ''}
+                      placeholder={placeholder}
+                      name={p.name}
+                      subcategory={p.subcategoria || p.category}
+                      price={p.price}
+                      offerPrice={p.offerPrice}
+                      stock={p.stock}
+                    />
                   ))}
                 </div>
               )}
