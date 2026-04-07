@@ -103,7 +103,7 @@ export default function RootLayout({
         <LanguageProvider>
           <Navbar />
 
-          <main className="min-h-[70vh] pt-16">
+          <main className="min-h-[70vh] pt-36 sm:pt-24">
             {children}
           </main>
 

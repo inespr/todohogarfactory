@@ -284,6 +284,11 @@ export function Navbar() {
 
       <div className={styles.searchContainerMobile}>{searchForm}</div>
 
+      {/* Banner de envío */}
+      <div className={styles.shippingBanner}>
+        {T.nav.shippingBanner}
+      </div>
+
       {mobileMenuOpen && (
         <button
           type="button"

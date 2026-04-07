@@ -251,6 +251,19 @@
   color: #6b7280;
 }
 
+.shippingBanner {
+  background-color: #f97316;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-align: center;
+  padding: 0.3rem 1rem;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .mobilePanel {
   position: fixed;
   top: 0;

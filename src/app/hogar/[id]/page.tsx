@@ -218,7 +218,7 @@ export default function HogarDetailPage() {
               {/* Info extra */}
               <div className="flex flex-col text-sm text-neutral-500 gap-1">
                 <span className="underline cursor-pointer">IVA incl.</span>
-                <span className="underline cursor-pointer text-blue-600">Envío disponible</span>
+                <span className="text-green-700 font-medium">🚚 Envío disponible solo en la provincia de Huelva</span>
               </div>
 
               {/* Botones WhatsApp y Compartir */}
