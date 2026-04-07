@@ -5,6 +5,7 @@ import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useLang } from '@/context/LanguageContext';
 
 const COLECCIONES = ['electrodomesticos', 'sofas', 'hogar', 'descanso'] as const;
 type Coleccion = typeof COLECCIONES[number];
@@ -37,6 +38,7 @@ type OfertaProduct = {
 };
 
 export default function OfertasPage() {
+  const { T } = useLang();
   const [products, setProducts] = useState<OfertaProduct[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -80,7 +82,7 @@ export default function OfertasPage() {
     fetchOfertas();
   }, []);
 
-  if (loading) return <div className="max-w-6xl mx-auto px-6 py-10 opacity-70">Cargando ofertas…</div>;
+  if (loading) return <div className="max-w-6xl mx-auto px-6 py-10 opacity-70">{T.common.cargando}</div>;
 
   return (
     <div className="max-w-6xl mx-auto px-3 sm:px-6 py-6 sm:py-8">
@@ -92,8 +94,8 @@ export default function OfertasPage() {
       </nav>
 
       <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900">Ofertas</h1>
-        <p className="mt-1 text-sm text-neutral-500">Productos seleccionados a precio especial.</p>
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900">{T.pages.ofertas}</h1>
+        <p className="mt-1 text-sm text-neutral-500">{T.pages.ofertasSubtitle}</p>
       </div>
 
       {products.length === 0 ? (
@@ -133,7 +135,7 @@ export default function OfertasPage() {
                   {p.stock === 0 ? (
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                       <span className="bg-red-600 text-white text-xs font-bold uppercase tracking-widest px-3 py-1 rounded">
-                        Vendido
+                        {T.common.vendido}
                       </span>
                     </div>
                   ) : null}
@@ -155,7 +157,7 @@ export default function OfertasPage() {
                       {hasOffer ? (
                         <>
                           <span className="text-base font-bold text-red-600 leading-none">{formatPrice(p.offerPrice!)}</span>
-                          <span className="text-xs text-neutral-400 line-through">Antes: {formatPrice(p.price)}</span>
+                          <span className="text-xs text-neutral-400 line-through">{T.common.antes} {formatPrice(p.price)}</span>
                         </>
                       ) : (
                         <span className="text-sm font-bold text-neutral-900">{formatPrice(p.price)}</span>

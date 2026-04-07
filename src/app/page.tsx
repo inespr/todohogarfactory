@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { collection, getDocs, query, limit } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { useLang } from '@/context/LanguageContext';
 
 type Product = {
   id: string;
@@ -27,6 +28,7 @@ const CATEGORIAS = [
 ];
 
 function ProductCard({ p, placeholder }: { p: Product; placeholder: string }) {
+  const { T } = useLang();
   const hasOffer = p.offerPrice && p.offerPrice < p.price;
   const descuento = hasOffer ? Math.round(((p.price - p.offerPrice!) / p.price) * 100) : null;
 
@@ -59,7 +61,7 @@ function ProductCard({ p, placeholder }: { p: Product; placeholder: string }) {
         {p.stock === 0 ? (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
             <span className="bg-red-600 text-white text-xs font-bold uppercase tracking-widest px-3 py-1 rounded">
-              Vendido
+              {T.common.vendido}
             </span>
           </div>
         ) : null}
@@ -79,7 +81,7 @@ function ProductCard({ p, placeholder }: { p: Product; placeholder: string }) {
             {hasOffer ? (
               <>
                 <span className="text-base font-bold text-red-600 leading-none">{formatPrice(p.offerPrice!)}</span>
-                <span className="text-xs text-neutral-400 line-through">Antes: {formatPrice(p.price)}</span>
+                <span className="text-xs text-neutral-400 line-through">{T.common.antes} {formatPrice(p.price)}</span>
               </>
             ) : (
               <span className="text-sm font-bold text-neutral-900">{formatPrice(p.price)}</span>
@@ -92,6 +94,7 @@ function ProductCard({ p, placeholder }: { p: Product; placeholder: string }) {
 }
 
 function SectionHeader({ title, subtitle, href }: { title: string; subtitle?: string; href: string }) {
+  const { T } = useLang();
   return (
     <div className="flex items-end justify-between gap-4 mb-5">
       <div>
@@ -99,13 +102,20 @@ function SectionHeader({ title, subtitle, href }: { title: string; subtitle?: st
         {subtitle && <p className="mt-0.5 text-sm text-neutral-500">{subtitle}</p>}
       </div>
       <Link href={href} className="shrink-0 text-sm font-semibold text-orange-600 hover:text-orange-800 transition-colors">
-        Ver más →
+        {T.common.verMas}
       </Link>
     </div>
   );
 }
 
 export default function Home() {
+  const { T } = useLang();
+  const categoryLabels: Record<string, string> = {
+    electrodomesticos: T.pages.electrodomesticos,
+    sofas: T.pages.sofas,
+    hogar: T.pages.hogar,
+    descanso: T.pages.descanso,
+  };
   const [ofertas, setOfertas] = useState<Product[]>([]);
   const [categorias, setCategorias] = useState<Record<string, Product[]>>({});
   const [loading, setLoading] = useState(true);
@@ -176,12 +186,12 @@ export default function Home() {
         {(loading || ofertas.length > 0) && (
           <section className="py-10 border-b border-neutral-200" style={{ borderImage: 'linear-gradient(to right, transparent, #e5e7eb 20%, #e5e7eb 80%, transparent) 1' }}>
             <SectionHeader
-              title="Ofertas destacadas"
-              subtitle="Los mejores descuentos del momento"
+              title={T.pages.home.ofertas}
+              subtitle={T.pages.home.ofertasSubtitle}
               href="/ofertas"
             />
             {loading ? (
-              <p className="text-center opacity-60 py-10">Cargando…</p>
+              <p className="text-center opacity-60 py-10">{T.common.cargando}</p>
             ) : (
               <div className="product-grid grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                 {ofertas.map((p) => (
@@ -202,9 +212,9 @@ export default function Home() {
           if (!loading && items.length === 0) return null;
           return (
             <section key={key} className={`py-10 ${i < CATEGORIAS.length - 1 ? 'border-b border-neutral-200' : ''}`} style={i < CATEGORIAS.length - 1 ? { borderImage: 'linear-gradient(to right, transparent, #e5e7eb 20%, #e5e7eb 80%, transparent) 1' } : {}}>
-              <SectionHeader title={label} href={href} />
+              <SectionHeader title={categoryLabels[key] ?? label} href={href} />
               {loading ? (
-                <p className="text-center opacity-60 py-10">Cargando…</p>
+                <p className="text-center opacity-60 py-10">{T.common.cargando}</p>
               ) : (
                 <div className="product-grid grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                   {items.map((p) => (

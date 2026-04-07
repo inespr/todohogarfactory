@@ -5,6 +5,7 @@ import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useLang } from '@/context/LanguageContext';
 
 const COLECCIONES = ['electrodomesticos', 'sofas', 'hogar', 'descanso'] as const;
 type Coleccion = typeof COLECCIONES[number];
@@ -37,6 +38,7 @@ type Producto = {
 };
 
 export default function ProductosPage() {
+  const { T } = useLang();
   const [products, setProducts] = useState<Producto[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCol, setSelectedCol] = useState<Coleccion | 'todos'>('todos');
@@ -82,13 +84,13 @@ export default function ProductosPage() {
 
   const filtered = selectedCol === 'todos' ? products : products.filter(p => p.coleccion === selectedCol);
 
-  if (loading) return <div className="max-w-screen-2xl mx-auto px-6 py-10 opacity-70">Cargando productos…</div>;
+  if (loading) return <div className="max-w-screen-2xl mx-auto px-6 py-10 opacity-70">{T.common.cargando}</div>;
 
   return (
     <div className="max-w-screen-2xl mx-auto px-3 sm:px-6 py-6 sm:py-8">
       <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Todos los productos</h1>
-        <p className="mt-1 text-sm text-neutral-500">{products.length} productos en catálogo</p>
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">{T.pages.productos}</h1>
+        <p className="mt-1 text-sm text-neutral-500">{products.length} {T.pages.productosSubtitle}</p>
       </div>
 
       {/* Filtros por colección */}
@@ -97,7 +99,7 @@ export default function ProductosPage() {
           onClick={() => setSelectedCol('todos')}
           className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${selectedCol === 'todos' ? 'bg-orange-500 text-white shadow-sm' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'}`}
         >
-          Todos ({products.length})
+          {T.common.todos} ({products.length})
         </button>
         {COLECCIONES.map((col) => {
           const count = products.filter(p => p.coleccion === col).length;
@@ -115,7 +117,7 @@ export default function ProductosPage() {
       </div>
 
       {filtered.length === 0 ? (
-        <p className="text-center opacity-70 py-16">No hay productos disponibles.</p>
+        <p className="text-center opacity-70 py-16">{T.common.sinProductos}</p>
       ) : (
         <div className="product-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
           {filtered.map((p) => {
@@ -150,7 +152,7 @@ export default function ProductosPage() {
                   {p.stock === 0 ? (
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                       <span className="bg-red-600 text-white text-xs font-bold uppercase tracking-widest px-3 py-1 rounded">
-                        Vendido
+                        {T.common.vendido}
                       </span>
                     </div>
                   ) : null}
@@ -172,7 +174,7 @@ export default function ProductosPage() {
                       {hasOffer ? (
                         <>
                           <span className="text-base font-bold text-red-600 leading-none">{formatPrice(p.offerPrice!)}</span>
-                          <span className="text-xs text-neutral-400 line-through">Antes: {formatPrice(p.price)}</span>
+                          <span className="text-xs text-neutral-400 line-through">{T.common.antes} {formatPrice(p.price)}</span>
                         </>
                       ) : (
                         <span className="text-sm font-bold text-neutral-900">{formatPrice(p.price)}</span>

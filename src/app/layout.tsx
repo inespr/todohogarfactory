@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { Navbar } from "@/components/Navbar/Navbar";
+import { LanguageProvider } from "@/context/LanguageContext";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import 'primereact/resources/themes/lara-light-blue/theme.css';
@@ -99,20 +100,22 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
 
-        <Navbar />
+        <LanguageProvider>
+          <Navbar />
 
-        <main className="min-h-[70vh] pt-16">
-          {children}
-        </main>
+          <main className="min-h-[70vh] pt-16">
+            {children}
+          </main>
 
-        <footer className="w-full border-t mt-12">
-          <div className="max-w-7xl mx-auto px-4 py-6 text-sm flex flex-col sm:flex-row items-center justify-between gap-2">
-            <p>© {new Date().getFullYear()} Todo Hogar Factory</p>
-            <p className="opacity-70">
-              Calidad en electrodomésticos, sofás y artículos para el hogar
-            </p>
-          </div>
-        </footer>
+          <footer className="w-full border-t mt-12">
+            <div className="max-w-7xl mx-auto px-4 py-6 text-sm flex flex-col sm:flex-row items-center justify-between gap-2">
+              <p>© {new Date().getFullYear()} Todo Hogar Factory</p>
+              <p className="opacity-70">
+                Calidad en electrodomésticos, sofás y artículos para el hogar
+              </p>
+            </div>
+          </footer>
+        </LanguageProvider>
       </body>
     </html>
   );

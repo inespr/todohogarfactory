@@ -15,6 +15,7 @@ import {
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { usePathname } from 'next/navigation';
+import { useLang } from '@/context/LanguageContext';
 
 export function Navbar() {
   const [search, setSearch] = useState('');
@@ -25,6 +26,7 @@ export function Navbar() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [subcategoriesMap, setSubcategoriesMap] = useState<Record<string, { slug: string; name: string }[]>>({});
   const pathname = usePathname();
+  const { lang, toggleLang, T } = useLang();
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'catalogoSubcategorias'), (snap) => {
@@ -80,26 +82,10 @@ export function Navbar() {
   }, []);
 
   const categories = [
-    {
-      label: 'Electrodomésticos',
-      url: '/electrodomesticos',
-      category: 'electrodomesticos' as ProductCategory
-    },
-    {
-      label: 'Sofás',
-      url: '/sofas',
-      category: 'sofas' as ProductCategory
-    },
-    {
-      label: 'Hogar',
-      url: '/hogar',
-      category: 'hogar' as ProductCategory
-    },
-    {
-      label: 'Descanso',
-      url: '/descanso',
-      category: 'descanso' as ProductCategory,
-    },
+    { label: T.nav.electrodomesticos, url: '/electrodomesticos', category: 'electrodomesticos' as ProductCategory },
+    { label: T.nav.sofas, url: '/sofas', category: 'sofas' as ProductCategory },
+    { label: T.nav.hogar, url: '/hogar', category: 'hogar' as ProductCategory },
+    { label: T.nav.descanso, url: '/descanso', category: 'descanso' as ProductCategory },
   ];
 
   const categoryUrl = (url: string, subcategory = 'Todos') => {
@@ -173,7 +159,7 @@ export function Navbar() {
       <IconField iconPosition="left">
         <InputIcon className="pi pi-search" />
         <InputText
-          placeholder="Buscar..."
+          placeholder={T.nav.search}
           name="q"
           value={search}
           onChange={(e) => {
@@ -220,7 +206,7 @@ export function Navbar() {
           onClick={() => setMobileMenuOpen((v) => !v)}
         >
           <i className={`pi ${mobileMenuOpen ? 'pi-times' : 'pi-bars'}`} aria-hidden="true" />
-          <span className={styles.srOnly}>{mobileMenuOpen ? 'Cerrar menú' : 'Abrir menú'}</span>
+          <span className={styles.srOnly}>{mobileMenuOpen ? T.nav.closeMenu : T.nav.openMenu}</span>
         </button>
 
         <div className={styles.menuDesktop} onMouseLeave={handleMouseLeave}>
@@ -255,10 +241,10 @@ export function Navbar() {
             );
           })}
           <Link href="/ofertas" className={`${styles.menuItemOferta} ${pathname === '/ofertas' ? styles.active : ''}`}>
-            Ofertas
+            {T.nav.ofertas}
           </Link>
           <Link href="/contacto" className={`${styles.menuItem} ${pathname === '/contacto' ? styles.active : ''}`}>
-            Contacto
+            {T.nav.contacto}
           </Link>
         </div>
 
@@ -274,9 +260,27 @@ export function Navbar() {
             />
           </span>
         </Link>
-
-        <div className={styles.searchContainerDesktop}>{searchForm}</div>
+        <div className={styles.rightSection}>
+          <div className={styles.searchContainerDesktop}>{searchForm}</div>
+          {/* Botón de idioma */}
+          <button
+            onClick={toggleLang}
+            title={lang === 'es' ? 'Switch to English' : 'Cambiar a Español'}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '0.3rem',
+              padding: '0.25rem 0.6rem', borderRadius: '999px',
+              border: '1px solid rgba(255,255,255,0.3)',
+              background: 'rgba(255,255,255,0.12)',
+              color: 'white', fontSize: '0.75rem', fontWeight: 600,
+              cursor: 'pointer', whiteSpace: 'nowrap',
+              transition: 'background 0.15s',
+            }}
+          >
+            {lang === 'es' ? '🇬🇧 EN' : '🇪🇸 ES'}
+          </button>
+        </div>
       </nav>
+
 
       <div className={styles.searchContainerMobile}>{searchForm}</div>
 
@@ -364,12 +368,25 @@ export function Navbar() {
           })}
 
           <Link href="/ofertas" className={styles.mobileLinkOferta} onClick={closeMobileMenu}>
-            Ofertas
+            {T.nav.ofertas}
           </Link>
 
           <Link href="/contacto" className={styles.mobileLink} onClick={closeMobileMenu}>
-            Contacto
+            {T.nav.contacto}
           </Link>
+
+          {/* Botón idioma en menú móvil */}
+          <button
+            onClick={toggleLang}
+            style={{
+              marginTop: '1rem', padding: '0.5rem 1rem',
+              borderRadius: '999px', border: '1px solid #e5e7eb',
+              background: '#f9fafb', fontSize: '0.85rem', fontWeight: 600,
+              cursor: 'pointer', width: 'fit-content',
+            }}
+          >
+            {lang === 'es' ? '🇬🇧 Switch to English' : '🇪🇸 Cambiar a Español'}
+          </button>
         </div>
       </div>
     </header>

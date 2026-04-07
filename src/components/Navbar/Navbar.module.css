@@ -22,7 +22,12 @@
   white-space: nowrap;
   border-width: 0;
 }
-
+.rightSection {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-left: auto; /* 🔥 empuja todo a la derecha */
+}
 .mobileToggle {
   display: inline-flex;
   align-items: center;

@@ -7,6 +7,7 @@ import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useLang } from '@/context/LanguageContext';
 
 type Product = {
   id: string;
@@ -68,6 +69,7 @@ function getAttrValues(config: AttrConfig, items: Product[]): string[] {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function ElectroList() {
+  const { T } = useLang();
   const searchParams = useSearchParams();
   const subcategoryParam = searchParams.get('subcategory') || '';
 
@@ -166,7 +168,7 @@ export function ElectroList() {
     return items.filter((p) => normalizeForCompare(p.subcategoria || p.category) === normalizeForCompare(cat)).length;
   };
 
-  if (loading) return <p className="opacity-70 py-10 text-center">Cargando productos…</p>;
+  if (loading) return <p className="opacity-70 py-10 text-center">{T.common.cargando}</p>;
 
   const matchedCategory = selectedCategory !== 'Todos' ? selectedCategory : null;
   const attrConfig = getAttrConfig(selectedCategory);
@@ -189,7 +191,7 @@ export function ElectroList() {
         {/* Sidebar */}
         <aside className="hidden lg:flex flex-col w-56 shrink-0 sticky top-24 bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden">
           <div className="px-4 py-3 border-b border-neutral-100">
-            <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Filtrar</span>
+            <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">{T.common.filtrar}</span>
           </div>
 
           {/* Categorías */}
@@ -206,7 +208,7 @@ export function ElectroList() {
                       : 'text-neutral-700 hover:bg-neutral-50'
                       }`}
                   >
-                    <span>{cat}</span>
+                    <span>{cat === 'Todos' ? T.common.todos : cat}</span>
                     <span className={`text-xs px-1.5 py-0.5 rounded-full ${active ? 'bg-orange-100 text-orange-600' : 'bg-neutral-100 text-neutral-500'}`}>
                       {count}
                     </span>
@@ -230,7 +232,7 @@ export function ElectroList() {
                       ? 'bg-orange-50 text-orange-700 font-semibold border-l-2 border-orange-500'
                       : 'text-neutral-700 hover:bg-neutral-50'}`}
                   >
-                    Todos
+                    {T.common.todos}
                   </button>
                 </li>
                 {attrValues.map(val => (
@@ -266,7 +268,7 @@ export function ElectroList() {
                     : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
                     }`}
                 >
-                  {cat}
+                  {cat === 'Todos' ? T.common.todos : cat}
                 </button>
               ))}
             </div>
@@ -293,25 +295,25 @@ export function ElectroList() {
             {/* Conteo + ordenar */}
             <div className="flex items-center justify-between gap-2">
               <p className="text-sm text-neutral-500">
-                <span className="font-semibold text-neutral-800">{filteredItems.length}</span> productos
+                <span className="font-semibold text-neutral-800">{filteredItems.length}</span> {T.common.productos}
               </p>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
                 className="rounded-lg border border-neutral-200 bg-neutral-50 px-2 sm:px-3 py-1.5 text-xs sm:text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-orange-400"
               >
-                <option value="default">Ordenar…</option>
-                <option value="price-asc">Precio ↑</option>
-                <option value="price-desc">Precio ↓</option>
-                <option value="name-asc">A–Z</option>
-                <option value="name-desc">Z–A</option>
+                <option value="default">{T.common.ordenar}</option>
+                <option value="price-asc">{T.common.precioAsc}</option>
+                <option value="price-desc">{T.common.precioDesc}</option>
+                <option value="name-asc">{T.common.az}</option>
+                <option value="name-desc">{T.common.za}</option>
               </select>
             </div>
           </div>
 
           {/* Lista de productos */}
           {filteredItems.length === 0 ? (
-            <p className="text-center opacity-70 py-16">No hay productos en esta categoría.</p>
+            <p className="text-center opacity-70 py-16">{T.common.sinProductos}</p>
           ) : (
             <div className="product-grid grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
               {filteredItems.map((p) => {
@@ -346,7 +348,7 @@ export function ElectroList() {
                       {p.stock === 0 ? (
                         <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                           <span className="bg-red-600 text-white text-xs font-bold uppercase tracking-widest px-3 py-1 rounded">
-                            Vendido
+                            {T.common.vendido}
                           </span>
                         </div>
                       ) : null}
@@ -373,7 +375,7 @@ export function ElectroList() {
                           {hasOffer ? (
                             <>
                               <span className="text-base font-bold text-red-600 leading-none">{formatPrice(p.offerPrice!)}</span>
-                              <span className="text-xs text-neutral-400 line-through">Antes: {formatPrice(p.price)}</span>
+                              <span className="text-xs text-neutral-400 line-through">{T.common.antes} {formatPrice(p.price)}</span>
                             </>
                           ) : (
                             <span className="text-sm font-bold text-neutral-900">{formatPrice(p.price)}</span>
