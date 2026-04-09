@@ -8,32 +8,8 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { ShareProductButton } from '@/components/ShareProductButton';
 
-const EXCLUDED_FIELDS = new Set([
-  'name', 'price', 'category', 'subcategoria', 'fotos',
-  'urlImg', 'imageUrl', 'imagen', 'foto', 'img', 'url', 'image',
-  'hasDefect', 'isOferta', 'stock', 'creadoEn', 'updatedAt', 'createdAt',
-  'observaciones', 'marca', 'medidas',
-]);
+import { buildExtras, fieldLabel as formatLabel } from '@/lib/productExtras';
 
-const FIELD_LABELS: Record<string, string> = {
-  observaciones: 'Observaciones', description: 'Descripción',
-  marca: 'Marca', medidas: 'Medidas', modelo: 'Modelo',
-  color: 'Color', colores: 'Colores disponibles', acabado: 'Acabado',
-  material: 'Material', tapizado: 'Tapizado', estructura: 'Estructura',
-  capacidad: 'Capacidad', carga: 'Carga máxima', peso: 'Peso',
-  potencia: 'Potencia (W)', voltaje: 'Voltaje', consumo: 'Consumo',
-  eficienciaEnergetica: 'Eficiencia energética', clase: 'Clase energética',
-  rpm: 'Velocidad (rpm)', ruido: 'Nivel de ruido (dB)',
-  dimensiones: 'Dimensiones', alto: 'Alto', ancho: 'Ancho',
-  largo: 'Largo', fondo: 'Fondo', profundidad: 'Profundidad',
-  programas: 'Programas', garantia: 'Garantía', plazas: 'Plazas',
-  tipo: 'Tipo', relleno: 'Relleno', firmeza: 'Firmeza', patas: 'Patas',
-};
-
-function formatLabel(key: string): string {
-  if (FIELD_LABELS[key]) return FIELD_LABELS[key];
-  return key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()).trim();
-}
 
 type ElectroItem = {
   id: string;
@@ -69,12 +45,7 @@ export default function ElectroDetailPage() {
           setNotFound(true);
         } else {
           const raw = snap.data() as Record<string, unknown>;
-          const extras: Record<string, string> = {};
-          for (const [key, value] of Object.entries(raw)) {
-            if (!EXCLUDED_FIELDS.has(key) && typeof value === 'string' && value.trim()) {
-              extras[key] = value;
-            }
-          }
+          const extras = buildExtras(raw);
           setProduct({
             id: snap.id,
             name: raw.name as string,
@@ -346,7 +317,7 @@ export default function ElectroDetailPage() {
               </button>
             </div>
             <div className="p-4">
-              <img
+              <Image
                 src={mainImg || '/placeholders/electrodomesticos.svg'}
                 alt={product.name}
                 className="w-full max-h-[75vh] object-contain rounded-lg"

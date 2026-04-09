@@ -5,7 +5,8 @@ import { useSearchParams } from 'next/navigation';
 import { SUBCATEGORY_NAMES } from '@/lib/products';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { ProductCard } from '@/components/ProductCard';
+import { ProductListCard } from '@/components/ProductListCard';
+import { fieldLabel } from '@/lib/productExtras';
 
 type Product = {
   id: string;
@@ -18,6 +19,8 @@ type Product = {
   price: number;
   offerPrice?: number;
   hasDefect: boolean;
+  marca?: string;
+  extras: Record<string, string>;
 };
 
 // ── Configuración de filtros por subcategoría ─────────────────────────────
@@ -46,6 +49,37 @@ const ATTR_CONFIG: Record<string, AttrConfig> = {
       if (/arc[oó]n/i.test(name)) return 'Arcón';
       if (/vertical/i.test(name)) return 'Vertical';
       return null;
+    },
+  },
+  frigorifico: {
+    label: 'Tipo',
+    extract: (name) => {
+      const n = name.toLowerCase();
+      if (/american[oa]/.test(n)) return 'Americano';
+      if (/combi/.test(n)) return 'Combi';
+      if (/\b2\s*puertas?\b/.test(n)) return '2 puertas';
+      if (/\b1\s*puerta?\b/.test(n)) return '1 puerta';
+      if (/minibar|mini\s*bar/.test(n)) return 'Minibar';
+      return null;
+    },
+  },
+  horno: {
+    label: 'Tipo',
+    extract: (name) => {
+      const n = name.toLowerCase();
+      if (/pirol[íi]tic[oa]/.test(n)) return 'Pirolítico';
+      if (/hidrol[íi]tic[oa]|hidr[aá]ulic[oa]/.test(n)) return 'Hidrolítico';
+      if (/vapor/.test(n)) return 'Vapor';
+      if (/multifunci[oó]n/.test(n)) return 'Multifunción';
+      if (/microondas/.test(n)) return 'Microondas';
+      return null;
+    },
+  },
+  vinoteca: {
+    label: 'Capacidad',
+    extract: (name) => {
+      const m = name.match(/(\d+)\s*botellas?/i);
+      return m ? `${m[1]} botellas` : null;
     },
   },
 };
@@ -77,7 +111,7 @@ export function ElectroList() {
   const [selectedAttr, setSelectedAttr] = useState<string>('');
 
   const normalizeForCompare = (str: string) =>
-    str.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim();
+    str.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim().replace(/s$/, '');
 
   const normalizeSubcategorySlug = (slug: string) => {
     const candidate = SUBCATEGORY_NAMES[slug.toLowerCase()];
@@ -103,8 +137,24 @@ export function ElectroList() {
       try {
         const snap = await getDocs(collection(db, 'electrodomesticos'));
         console.log('Documentos en Firestore:', snap.size, snap.docs.map(d => d.id));
+        const EXCLUDED = new Set([
+          'name', 'price', 'category', 'subcategoria', 'fotos',
+          'urlImg', 'imageUrl', 'imagen', 'foto', 'img', 'url', 'image',
+          'hasDefect', 'isOferta', 'stock', 'creadoEn', 'updatedAt', 'createdAt',
+          'observaciones', 'marca', 'medidas', 'offerPrice',
+        ]);
         const electroProducts: Product[] = snap.docs.map((d) => {
           const raw = d.data() as Record<string, unknown>;
+          const extras: Record<string, string> = {};
+          for (const [key, value] of Object.entries(raw)) {
+            if (!EXCLUDED.has(key) && typeof value === 'string') {
+              const v = value.trim();
+              if (!v) continue;
+              // Descarta valores cortos que parecen códigos internos (ej: "ts", "lv", "ab")
+              if (v.length <= 3 && !/^\d+(\.\d+)?$/.test(v)) continue;
+              extras[key] = v;
+            }
+          }
           return {
             id: d.id,
             name: raw.name as string,
@@ -116,6 +166,8 @@ export function ElectroList() {
             price: raw.price as number ?? 0,
             offerPrice: raw.offerPrice as number ?? 0,
             hasDefect: raw.hasDefect as boolean || false,
+            marca: raw.marca as string | undefined,
+            extras,
           };
         });
         setItems(electroProducts);
@@ -312,9 +364,9 @@ export function ElectroList() {
           {filteredItems.length === 0 ? (
             <p className="text-center opacity-70 py-16">No hay productos en esta categoría.</p>
           ) : (
-            <div className="product-grid">
+            <div className="list-grid">
               {filteredItems.map((p) => (
-                <ProductCard
+                <ProductListCard
                   key={p.id}
                   href={`/electrodomesticos/${p.id}`}
                   image={p.fotos[0] || ''}
@@ -324,6 +376,11 @@ export function ElectroList() {
                   price={p.price}
                   offerPrice={p.offerPrice}
                   stock={p.stock}
+                  marca={p.marca}
+                  specs={Object.entries(p.extras).slice(0, 6).map(([k, v]) => ({
+                    label: fieldLabel(k),
+                    value: v,
+                  }))}
                 />
               ))}
             </div>

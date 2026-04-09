@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { collection, getDocs, query, limit } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { ProductCard } from '../components/ProductCard';
+import { ProductListCard } from '../components/ProductListCard';
+import { buildExtras, fieldLabel } from '../lib/productExtras';
 
 type Product = {
   id: string;
@@ -17,6 +18,8 @@ type Product = {
   subcategoria?: string;
   stock: number;
   coleccion: string;
+  marca?: string;
+  extras: Record<string, string>;
 };
 
 const CATEGORIAS = [
@@ -70,6 +73,8 @@ export default function Home() {
                 subcategoria: (raw.subcategoria as string) || '',
                 stock: (raw.stock as number) ?? 0,
                 coleccion: key,
+                marca: raw.marca as string | undefined,
+                extras: buildExtras(raw),
               };
             });
 
@@ -119,9 +124,9 @@ export default function Home() {
             {loading ? (
               <p className="text-center opacity-60 py-10">Cargando…</p>
             ) : (
-              <div className="product-grid">
+              <div className="list-grid">
                 {ofertas.map((p) => (
-                  <ProductCard
+                  <ProductListCard
                     key={`${p.coleccion}-${p.id}`}
                     href={`/${p.coleccion}/${p.id}`}
                     image={p.fotos[0] || ''}
@@ -131,6 +136,8 @@ export default function Home() {
                     price={p.price}
                     offerPrice={p.offerPrice}
                     stock={p.stock}
+                    marca={p.marca}
+                    specs={Object.entries(p.extras).slice(0, 6).map(([k, v]) => ({ label: fieldLabel(k), value: v }))}
                   />
                 ))}
               </div>
@@ -148,9 +155,9 @@ export default function Home() {
               {loading ? (
                 <p className="text-center opacity-60 py-10">Cargando…</p>
               ) : (
-                <div className="product-grid">
+                <div className="list-grid">
                   {items.map((p) => (
-                    <ProductCard
+                    <ProductListCard
                       key={p.id}
                       href={`/${p.coleccion}/${p.id}`}
                       image={p.fotos[0] || ''}

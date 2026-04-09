@@ -1,6 +1,6 @@
 export type ProductCategory = "electrodomesticos" | "sofas" | "hogar" | "descanso";
 
-export type ElectroSubcategory = "lavadora" | "secadora" | "frigorifico-combi" | "arcon-congelador" | "placa-induccion" | "placa-gas" | "microondas" | "lavavajillas" | "horno" | "vitroceramica" | "campana-extractora" | "nevera" | "congelador" | "batidora" | "tostadora";
+export type ElectroSubcategory = "lavadora" | "secadora" | "frigorifico-combi" | "arcon-congelador" | "placa-induccion" | "placa-gas" | "microondas" | "lavavajillas" | "horno" | "vitroceramica" | "campana-extractora" | "nevera" | "congelador" | "batidora" | "tostador";
 export type SofaSubcategory = "sofa-cama" | "chaise-longue" | "sillon" | "butaca" | "3+2" | "sofa-individual" | "puff" | "reposapies";
 export type HogarSubcategory = "cafetera-italiana" | "cafetera" | "ollas" | "cubiertos" | "vasos" | "secador" | "ropa-cama" | "toallas" | "platos" | "tazas" | "manteles" | "cortinas" | "cojines";
 export type DescansoSubcategory =
@@ -112,7 +112,7 @@ export const SUBCATEGORIES_BY_CATEGORY: Record<ProductCategory, string[]> = {
     "nevera",
     "congelador",
     "batidora",
-    "tostadora",
+    "tostador",
   ],
   sofas: [
     "sofa-cama",
@@ -170,7 +170,7 @@ export const SUBCATEGORY_NAMES: Record<string, string> = {
   "nevera": "Nevera",
   "congelador": "Congelador",
   "batidora": "Batidora",
-  "tostadora": "Tostadora",
+  "tostador": "Tostadores",
   // Sofás
   "sofa-cama": "Sofá Cama",
   "chaise-longue": "Chaise Longue",

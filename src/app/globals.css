@@ -33,26 +33,23 @@ body {
   display: flex !important;
   flex-direction: column !important;
   height: 230px !important;
-  min-height: 230px !important;
-  max-height: 230px !important;
   overflow: hidden !important;
   width: 100% !important;
+  box-sizing: border-box !important;
 }
 .card-img {
   height: 140px !important;
   min-height: 140px !important;
   max-height: 140px !important;
   flex-shrink: 0 !important;
-  position: relative;
+  position: relative !important;
   background: #fafafa;
   width: 100%;
-  overflow: hidden;
+  overflow: hidden !important;
 }
 .card-info {
-  height: 90px !important;
-  min-height: 90px !important;
-  max-height: 90px !important;
-  flex-shrink: 0 !important;
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
   overflow: hidden !important;
   width: 100% !important;
   box-sizing: border-box !important;
@@ -60,30 +57,37 @@ body {
 .product-grid {
   display: grid !important;
   grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  grid-auto-rows: 230px !important;
+  grid-auto-rows: auto !important;
+  align-items: start !important;
   gap: 12px !important;
 }
 
 @media (min-width: 640px) {
   .product-card-link {
     height: 290px !important;
-    min-height: 290px !important;
-    max-height: 290px !important;
   }
   .card-img {
     height: 180px !important;
     min-height: 180px !important;
     max-height: 180px !important;
   }
-  .card-info {
-    height: 110px !important;
-    min-height: 110px !important;
-    max-height: 110px !important;
-  }
   .product-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-    grid-auto-rows: 290px !important;
     gap: 16px !important;
+  }
+}
+
+/* ── Grid de vista lista (1 col móvil, 2 col desktop) ───────── */
+.list-grid {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 12px !important;
+}
+
+@media (min-width: 640px) {
+  .list-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 14px !important;
   }
 }
 
