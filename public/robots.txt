@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://todohogarfactory.es
+
+# Sitemaps
+Sitemap: https://todohogarfactory.es/sitemap.xml

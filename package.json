@@ -6,12 +6,14 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "postbuild": "next-sitemap"
   },
   "dependencies": {
     "@tailwindcss/line-clamp": "^0.4.4",
     "firebase": "^12.1.0",
     "next": "^15.5.14",
+    "next-sitemap": "^4.2.3",
     "nodemailer": "^7.0.12",
     "primeflex": "^4.0.0",
     "primeicons": "^7.0.0",
