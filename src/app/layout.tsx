@@ -1,10 +1,9 @@
-'use client'; // Solo si necesitas hooks aquí, si no, mejor mantenerlo como Server Component (quitaría el JSON.stringify dinámico)
-
 import type { Metadata, Viewport } from "next";
 import { Navbar } from "@/components/Navbar/Navbar";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
+// Estilos de PrimeReact
 import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
@@ -17,6 +16,7 @@ import { Divider } from "primereact/divider";
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
+// METADATA (Solo permitido en Server Components)
 export const metadata: Metadata = {
   metadataBase: new URL("https://todohogarfactory.es"),
   title: {
@@ -24,8 +24,8 @@ export const metadata: Metadata = {
     template: "%s | Todo Hogar Factory",
   },
   description:
-    "Especialistas en electrodomésticos, sofás y descanso. Todo Hogar Factory ofrece calidad y precios de outlet para tu hogar. ¡Visítanos y ahorra!",
-  keywords: ["electrodomésticos", "sofás", "muebles", "Todo Hogar Factory", "ofertas hogar", "barato"],
+    "Especialistas en electrodomésticos, sofás y descanso en Valverde del Camino. Todo Hogar Factory ofrece calidad y precios de outlet para tu hogar. ¡Visítanos y ahorra!",
+  keywords: ["electrodomésticos", "sofás", "muebles", "Todo Hogar Factory", "outlet hogar", "Valverde del Camino"],
   alternates: { canonical: '/' },
   robots: { index: true, follow: true },
   openGraph: {
@@ -41,15 +41,14 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#f37021", // Tu color naranja corporativo
+  themeColor: "#f37021",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
 
-  // JSON-LD más completo para aparecer como tienda física/local
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "FurnitureStore", // Cambiado a tienda de muebles/hogar para mayor relevancia
+    "@type": "FurnitureStore",
     "name": "Todo Hogar Factory",
     "alternateName": "TodoHogar Factory",
     "description": "Tienda especializada en electrodomésticos, sofás y colchones con los mejores precios.",
@@ -57,7 +56,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     "logo": "https://todohogarfactory.es/logo.png",
     "address": {
       "@type": "PostalAddress",
-      "addressLocality": "Valverde del Camino", 
+      "addressLocality": "Valverde del Camino",
       "addressCountry": "ES"
     },
     "priceRange": "€€",
@@ -76,7 +75,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {/* Marcado de datos estructurados para Google */}
+        {/* Datos estructurados para Google */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -84,7 +83,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         <AnalyticsLoader gaId="G-Y2NEYF1W0H" />
 
-        {/* Skip to content para Accesibilidad */}
         <a href="#main-content" className="sr-only focus:not-sr-only p-2 bg-orange-500 text-white absolute z-[200]">
           Saltar al contenido principal
         </a>
@@ -101,7 +99,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <div>
                 <h3 className="font-bold text-lg mb-4">Todo Hogar Factory</h3>
                 <p className="text-sm opacity-80 leading-relaxed">
-                  Tu outlet de confianza para equipar tu casa con electrodomésticos de última generación y los sofás más cómodos.
+                  Tu outlet de confianza para equipar tu casa con electrodomésticos de última generación y los sofás más cómodos en Valverde del Camino.
                 </p>
               </div>
               <div>
