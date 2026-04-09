@@ -316,7 +316,7 @@ export default function DescansoDetailPage() {
               </button>
             </div>
             <div className="p-4">
-              <img
+              <Image
                 src={mainImg || '/placeholders/descanso.svg'}
                 alt={product.name}
                 className="w-full max-h-[75vh] object-contain rounded-lg"
