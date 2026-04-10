@@ -111,7 +111,7 @@ export default function Home() {
 
   return (
     <>
-      <div className="max-w-screen-2xl mx-auto px-3 sm:px-6 py-6 sm:py-10 flex flex-col">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10 flex flex-col">
 
         {/* Sección Ofertas */}
         {(loading || ofertas.length > 0) && (

@@ -78,7 +78,10 @@ function BuscarContent() {
         const normalized = q.toLowerCase();
         setAllResults(all.filter((p) =>
           p.name.toLowerCase().includes(normalized) ||
-          p.observaciones.toLowerCase().includes(normalized)
+          p.observaciones.toLowerCase().includes(normalized) ||
+          (p.marca && p.marca.toLowerCase().includes(normalized)) ||
+          (p.subcategoria && p.subcategoria.toLowerCase().includes(normalized)) ||
+          Object.values(p.extras).some((v) => v.toLowerCase().includes(normalized))
         ));
       } catch (e) {
         console.error(e);
@@ -92,15 +95,16 @@ function BuscarContent() {
   const availableCols = COLLECTIONS.filter(col => allResults.some(p => p.category === col));
 
   let filtered = selectedCol === 'Todos' ? allResults : allResults.filter(p => p.category === selectedCol);
-  if (sortBy === 'price-asc') filtered = [...filtered].sort((a, b) => a.price - b.price);
-  else if (sortBy === 'price-desc') filtered = [...filtered].sort((a, b) => b.price - a.price);
+  const ep = (p: Product) => (p.offerPrice && p.offerPrice > 0 && p.offerPrice < p.price) ? p.offerPrice : p.price;
+  if (sortBy === 'price-asc') filtered = [...filtered].sort((a, b) => ep(a) - ep(b));
+  else if (sortBy === 'price-desc') filtered = [...filtered].sort((a, b) => ep(b) - ep(a));
   else if (sortBy === 'name-asc') filtered = [...filtered].sort((a, b) => a.name.localeCompare(b.name));
   else if (sortBy === 'name-desc') filtered = [...filtered].sort((a, b) => b.name.localeCompare(a.name));
 
   const hasResults = !loading && allResults.length > 0;
 
   return (
-    <div className="max-w-screen-2xl mx-auto px-3 sm:px-6 py-6 sm:py-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
       <h1 className="text-2xl font-bold mb-5">
         {q ? `Resultados para "${q}"` : 'Buscar productos'}
       </h1>
@@ -227,7 +231,7 @@ function BuscarContent() {
 
 export default function BuscarPage() {
   return (
-    <Suspense fallback={<div className="max-w-screen-2xl mx-auto px-4 py-10 opacity-70">Cargando…</div>}>
+    <Suspense fallback={<div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 opacity-70">Cargando…</div>}>
       <BuscarContent />
     </Suspense>
   );

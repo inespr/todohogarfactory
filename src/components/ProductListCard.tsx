@@ -83,9 +83,6 @@ export function ProductListCard({
         {/* Fila superior: nombre + precio */}
         <div className="flex items-start justify-between gap-2">
           <div className="flex flex-col gap-0.5 min-w-0">
-            {subcategory && (
-              <span className="text-[10px] text-neutral-400 uppercase tracking-wide">{subcategory}</span>
-            )}
             <p className="text-xs sm:text-sm font-semibold text-neutral-900 group-hover:text-orange-600 transition-colors leading-snug line-clamp-2">
               {name}
             </p>

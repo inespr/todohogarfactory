@@ -15,23 +15,23 @@ export default function ContactoPage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-10">
+    <div className="px-4 sm:px-24 md:px-52 lg:px-96 py-10 sm:py-16">
       <h1 className="text-3xl font-bold mb-2 text-center">Contacto</h1>
       <p className="text-center opacity-70 mb-10 text-sm">
         Estamos en Valverde del Camino. Escríbenos o llámanos sin compromiso.
       </p>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+      <div className="flex flex-col sm:flex-row justify-center items-stretch gap-6">
         {/* Info tienda */}
-        <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-6">
-          <h2 className="text-lg font-semibold mb-4">Dónde encontrarnos</h2>
+        <div className="flex flex-col bg-white rounded-2xl border border-neutral-200 shadow-sm p-6 w-full sm:w-80">
+          <h2 className="text-lg font-semibold mb-4 text-center">Dónde encontrarnos</h2>
           <InfoTienda telefono={telefono} whatsapp={whatsapp} />
         </div>
 
         {/* Formulario */}
-        <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-6">
+        <div className="flex flex-col bg-white rounded-2xl border border-neutral-200 shadow-sm p-6 w-full sm:w-80">
           {isSuccess ? (
-            <div className="flex flex-col items-center justify-center h-full py-10 text-center">
+            <div className="flex flex-col items-center justify-center flex-1 py-10 text-center">
               <div className="text-5xl mb-4">✅</div>
               <h3 className="text-xl font-semibold text-green-600 mb-2">¡Mensaje enviado!</h3>
               <p className="text-sm text-neutral-600 mb-6">{successMessage}</p>
@@ -44,7 +44,7 @@ export default function ContactoPage() {
             </div>
           ) : (
             <>
-              <h2 className="text-lg font-semibold mb-4">Escríbenos</h2>
+              <h2 className="text-lg font-semibold mb-4 text-center">Escríbenos</h2>
               <ContactForm onSuccess={handleFormSuccess} />
             </>
           )}

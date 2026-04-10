@@ -207,8 +207,9 @@ export function CategoryList({ collection: collectionName, placeholder, detailBa
       const config = getAttrConfig(selectedCategory);
       if (config) updated = updated.filter(p => config.extract(p.name) === selectedAttr);
     }
-    if (sortBy === 'price-asc') updated.sort((a, b) => (a.price ?? 0) - (b.price ?? 0));
-    else if (sortBy === 'price-desc') updated.sort((a, b) => (b.price ?? 0) - (a.price ?? 0));
+    const ep = (p: CategoryItem) => (p.offerPrice && p.offerPrice > 0 && p.offerPrice < (p.price ?? 0)) ? p.offerPrice : (p.price ?? 0);
+    if (sortBy === 'price-asc') updated.sort((a, b) => ep(a) - ep(b));
+    else if (sortBy === 'price-desc') updated.sort((a, b) => ep(b) - ep(a));
     else if (sortBy === 'name-asc') updated.sort((a, b) => a.name.localeCompare(b.name));
     else if (sortBy === 'name-desc') updated.sort((a, b) => b.name.localeCompare(a.name));
     updated.sort((a, b) => ((a.stock ?? 0) === 0 ? 1 : 0) - ((b.stock ?? 0) === 0 ? 1 : 0));

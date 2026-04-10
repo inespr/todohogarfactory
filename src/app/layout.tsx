@@ -99,15 +99,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <div>
                 <h3 className="font-bold text-lg mb-4">Todo Hogar Factory</h3>
                 <p className="text-sm opacity-80 leading-relaxed">
-                  Tu outlet de confianza para equipar tu casa con electrodomésticos de última generación y los sofás más cómodos en Valverde del Camino.
+                  Tu tienda de confianza para equipar tu casa con electrodomésticos de última generación, colchones y los sofás más cómodos en Valverde del Camino.
                 </p>
               </div>
               <div>
                 <h3 className="font-bold text-lg mb-4">Enlaces rápidos</h3>
                 <ul className="text-sm space-y-2">
-                  <li><a href="/tienda" className="hover:text-orange-600 transition-colors">Tienda</a></li>
                   <li><a href="/contacto" className="hover:text-orange-600 transition-colors">Contacto</a></li>
                   <li><a href="/politica-cookies" className="hover:text-orange-600 transition-colors">Política de Cookies</a></li>
+                  <li><a href="/condiciones" className="hover:text-orange-600 transition-colors">Condiciones de Compra</a></li>
+                  <li><a href="/servicios" className="hover:text-orange-600 transition-colors">Servicios</a></li>
                 </ul>
               </div>
               <div>
@@ -123,7 +124,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <p>© {new Date().getFullYear()} Todo Hogar Factory. Todos los derechos reservados.</p>
               <div className="flex gap-4">
                 <span>Calidad garantizada</span>
-                <span>Pago Seguro</span>
               </div>
             </div>
           </div>

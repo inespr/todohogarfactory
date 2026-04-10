@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:mobile="http://www.google.com/schemas/sitemap-mobile/1.0" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
-<url><loc>https://todohogarfactory.es/robots.txt</loc><lastmod>2026-04-09T16:31:39.878Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
-<url><loc>https://todohogarfactory.es/sitemap.xml</loc><lastmod>2026-04-09T16:31:39.879Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
-<url><loc>https://todohogarfactory.es/buscar</loc><lastmod>2026-04-09T16:31:39.879Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
-<url><loc>https://todohogarfactory.es/contacto</loc><lastmod>2026-04-09T16:31:39.879Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
-<url><loc>https://todohogarfactory.es</loc><lastmod>2026-04-09T16:31:39.879Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
-<url><loc>https://todohogarfactory.es/ofertas</loc><lastmod>2026-04-09T16:31:39.879Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
-<url><loc>https://todohogarfactory.es/productos</loc><lastmod>2026-04-09T16:31:39.879Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
-<url><loc>https://todohogarfactory.es/sofas</loc><lastmod>2026-04-09T16:31:39.879Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
-<url><loc>https://todohogarfactory.es/descanso</loc><lastmod>2026-04-09T16:31:39.879Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
-<url><loc>https://todohogarfactory.es/electrodomesticos</loc><lastmod>2026-04-09T16:31:39.879Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
-<url><loc>https://todohogarfactory.es/hogar</loc><lastmod>2026-04-09T16:31:39.879Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://todohogarfactory.es/sitemap.xml</loc><lastmod>2026-04-10T09:48:38.103Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://todohogarfactory.es/robots.txt</loc><lastmod>2026-04-10T09:48:38.104Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://todohogarfactory.es/condiciones</loc><lastmod>2026-04-10T09:48:38.104Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://todohogarfactory.es/servicios</loc><lastmod>2026-04-10T09:48:38.104Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://todohogarfactory.es/buscar</loc><lastmod>2026-04-10T09:48:38.104Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://todohogarfactory.es/contacto</loc><lastmod>2026-04-10T09:48:38.104Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://todohogarfactory.es/politica-cookies</loc><lastmod>2026-04-10T09:48:38.104Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://todohogarfactory.es/ofertas</loc><lastmod>2026-04-10T09:48:38.104Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://todohogarfactory.es</loc><lastmod>2026-04-10T09:48:38.104Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://todohogarfactory.es/productos</loc><lastmod>2026-04-10T09:48:38.104Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://todohogarfactory.es/descanso</loc><lastmod>2026-04-10T09:48:38.104Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://todohogarfactory.es/sofas</loc><lastmod>2026-04-10T09:48:38.104Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://todohogarfactory.es/hogar</loc><lastmod>2026-04-10T09:48:38.104Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://todohogarfactory.es/electrodomesticos</loc><lastmod>2026-04-10T09:48:38.104Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
 </urlset>

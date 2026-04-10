@@ -36,6 +36,16 @@ export const FIELD_LABELS: Record<string, string> = {
   garantia: 'Garantía',
   plazas: 'Plazas',
   tipo: 'Tipo',
+  instalacion: 'Instalación',
+  'Cn2 Tipo': 'Tipo',
+  'Cn2 Instalacion': 'Instalación',
+  'Cn2 Capacidad': 'Capacidad',
+  'cn2 tipo': 'Tipo',
+  'cn2 instalacion': 'Instalación',
+  'cn2 capacidad': 'Capacidad',
+  Cn2Tipo: 'Tipo',
+  Cn2Instalacion: 'Instalación',
+  Cn2Capacidad: 'Capacidad',
   relleno: 'Relleno',
   firmeza: 'Firmeza',
   patas: 'Patas',
@@ -63,11 +73,23 @@ export const FIELD_LABELS: Record<string, string> = {
 
 export function fieldLabel(key: string): string {
   if (FIELD_LABELS[key]) return FIELD_LABELS[key];
-  // Limpia prefijos tipo "ts", "lv", "ab" seguidos de mayúscula o espacio (ej: "tsPotencia" → "potencia")
-  const cleaned = key
-    .replace(/^[a-z]{1,3}(?=[A-Z])/, '')   // tsPotencia → Potencia
-    .replace(/^[a-z]{1,3}\s+/, '')          // "ts potencia" → "potencia"
-    .replace(/([A-Z])/g, ' $1')             // camelCase → palabras
+  // Quita prefijos tipo "Cn2 ", "cn2 ", "AB3" (1-4 letras + dígitos + espacio opcional)
+  const stripped = key
+    .replace(/^[A-Za-z]{1,4}\d+\s*/i, '')    // "Cn2 Tipo"→"Tipo", "cn2tipo"→"tipo"
+    .replace(/^[a-z]{1,3}(?=[A-Z])/, '')      // tsPotencia → Potencia
+    .replace(/^[a-z]{1,3}\s+/, '');           // "ts potencia" → "potencia"
+  // Intenta lookup: tal cual, en minúscula, y sin espacios en minúscula
+  const tries = [
+    stripped,
+    stripped.charAt(0).toLowerCase() + stripped.slice(1),
+    stripped.toLowerCase(),
+    stripped.toLowerCase().replace(/\s+/g, ''),
+  ];
+  for (const t of tries) {
+    if (FIELD_LABELS[t]) return FIELD_LABELS[t];
+  }
+  const cleaned = stripped
+    .replace(/([A-Z])/g, ' $1')
     .replace(/^./, s => s.toUpperCase())
     .trim();
   return cleaned || key;

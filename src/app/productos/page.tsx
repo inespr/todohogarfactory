@@ -82,10 +82,10 @@ export default function ProductosPage() {
 
   const filtered = selectedCol === 'todos' ? products : products.filter(p => p.coleccion === selectedCol);
 
-  if (loading) return <div className="max-w-screen-2xl mx-auto px-6 py-10 opacity-70">Cargando productos…</div>;
+  if (loading) return <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 opacity-70">Cargando productos…</div>;
 
   return (
-    <div className="max-w-screen-2xl mx-auto px-3 sm:px-6 py-6 sm:py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
       <div className="mb-6">
         <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Todos los productos</h1>
         <p className="mt-1 text-sm text-neutral-500">{products.length} productos en catálogo</p>
@@ -158,9 +158,6 @@ export default function ProductosPage() {
 
                 {/* Info */}
                 <div className="card-info p-3 flex flex-col">
-                  <p className="text-[10px] text-neutral-400 uppercase tracking-wide truncate">
-                    {p.subcategoria || COLECCION_LABEL[p.coleccion]}
-                  </p>
                   <h3
                     className="mt-0.5 text-sm font-semibold text-neutral-900 group-hover:text-orange-600 transition-colors leading-snug"
                     style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}

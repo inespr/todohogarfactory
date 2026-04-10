@@ -62,9 +62,6 @@ export function ProductCard({ href, image, placeholder, name, subcategory, price
 
       {/* Info */}
       <div className="card-info p-3 flex flex-col">
-        {subcategory && (
-          <p className="text-[10px] text-neutral-400 uppercase tracking-wide truncate">{subcategory}</p>
-        )}
         <p
           className="mt-0.5 text-sm font-semibold text-neutral-900 group-hover:text-orange-600 transition-colors"
           style={{

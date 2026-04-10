@@ -47,7 +47,7 @@ export default function OfertasPage() {
   const [loading, setLoading] = useState(true);
   const [selectedCol, setSelectedCol] = useState<Coleccion | 'Todos'>('Todos');
   const [selectedSubcat, setSelectedSubcat] = useState<string>('');
-  const [sortBy, setSortBy] = useState<string>('default');
+  const [sortBy, setSortBy] = useState<string>('discount');
 
   useEffect(() => {
     const fetchOfertas = async () => {
@@ -106,8 +106,9 @@ export default function OfertasPage() {
 
   let filtered = selectedCol === 'Todos' ? products : products.filter(p => p.coleccion === selectedCol);
   if (selectedSubcat) filtered = filtered.filter(p => normalize(p.subcategoria || p.category) === normalize(selectedSubcat));
-  if (sortBy === 'price-asc') filtered = [...filtered].sort((a, b) => (a.offerPrice ?? a.price) - (b.offerPrice ?? b.price));
-  else if (sortBy === 'price-desc') filtered = [...filtered].sort((a, b) => (b.offerPrice ?? b.price) - (a.offerPrice ?? a.price));
+  const effectivePrice = (p: OfertaProduct) => (p.offerPrice && p.offerPrice > 0 && p.offerPrice < p.price) ? p.offerPrice : p.price;
+  if (sortBy === 'price-asc') filtered = [...filtered].sort((a, b) => effectivePrice(a) - effectivePrice(b));
+  else if (sortBy === 'price-desc') filtered = [...filtered].sort((a, b) => effectivePrice(b) - effectivePrice(a));
   else if (sortBy === 'discount') filtered = [...filtered].sort((a, b) => {
     const da = a.offerPrice ? (a.price - a.offerPrice) / a.price : 0;
     const db2 = b.offerPrice ? (b.price - b.offerPrice) / b.price : 0;
@@ -115,10 +116,10 @@ export default function OfertasPage() {
   });
   else if (sortBy === 'name-asc') filtered = [...filtered].sort((a, b) => a.name.localeCompare(b.name));
 
-  if (loading) return <div className="max-w-screen-2xl mx-auto px-6 py-10 opacity-70">Cargando ofertas…</div>;
+  if (loading) return <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 opacity-70">Cargando ofertas…</div>;
 
   return (
-    <div className="max-w-screen-2xl mx-auto px-3 sm:px-6 py-6 sm:py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
       <nav className="flex flex-wrap items-center gap-1.5 text-sm text-neutral-400 mb-4">
         <Link href="/" className="hover:text-neutral-700 transition-colors">Inicio</Link>
         <span>›</span>
@@ -266,8 +267,8 @@ export default function OfertasPage() {
                 onChange={(e) => setSortBy(e.target.value)}
                 className="rounded-lg border border-neutral-200 bg-neutral-50 px-2 sm:px-3 py-1.5 text-xs sm:text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-orange-400"
               >
-                <option value="default">Ordenar…</option>
                 <option value="discount">Mayor descuento</option>
+                <option value="default">Ordenar…</option>
                 <option value="price-asc">Precio ↑</option>
                 <option value="price-desc">Precio ↓</option>
                 <option value="name-asc">A–Z</option>
