@@ -171,7 +171,7 @@ export function ElectroList() {
           'name', 'price', 'category', 'subcategoria', 'fotos',
           'urlImg', 'imageUrl', 'imagen', 'foto', 'img', 'url', 'image',
           'hasDefect', 'isOferta', 'stock', 'creadoEn', 'updatedAt', 'createdAt',
-          'observaciones', 'marca', 'medidas', 'offerPrice',
+          'observaciones', 'marca', 'medidas', 'offerPrice', 'grupo',
         ]);
         const electroProducts: Product[] = snap.docs.map((d) => {
           const raw = d.data() as Record<string, unknown>;

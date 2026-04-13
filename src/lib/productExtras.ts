@@ -3,7 +3,7 @@ export const EXCLUDED_EXTRA_FIELDS = new Set([
   'name', 'price', 'category', 'subcategoria', 'fotos',
   'urlImg', 'imageUrl', 'imagen', 'foto', 'img', 'url', 'image',
   'hasDefect', 'isOferta', 'stock', 'creadoEn', 'updatedAt', 'createdAt',
-  'observaciones', 'marca', 'medidas', 'offerPrice',
+  'observaciones', 'marca', 'medidas', 'offerPrice', 'grupo',
 ]);
 
 // Labels legibles para cada clave de Firestore

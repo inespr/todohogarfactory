@@ -144,6 +144,33 @@
   text-decoration: none;
 }
 
+.dropdownGroupHeader {
+  padding: 0.5rem 1.25rem 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #9ca3af;
+  border-top: 1px solid #f3f4f6;
+  margin-top: 0.25rem;
+}
+
+.dropdownGroupItem {
+  display: block;
+  padding: 0.65rem 1.25rem 0.65rem 1.75rem;
+  color: #333333;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.88rem;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.dropdownGroupItem:hover {
+  background-color: #ff6f52;
+  color: #ffffff;
+  text-decoration: none;
+}
+
 .logo {
   display: flex;
   align-items: center;
@@ -408,6 +435,31 @@
 }
 
 .mobileSublink:hover {
+  text-decoration: underline;
+  opacity: 1;
+}
+
+.mobileGroupHeader {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #9ca3af;
+  padding: 0.5rem 0.25rem 0.15rem;
+  margin-top: 0.25rem;
+}
+
+.mobileGroupSublink {
+  color: #111827;
+  text-decoration: none;
+  font-weight: 600;
+  opacity: 0.8;
+  padding: 0.4rem 0.25rem 0.4rem 0.75rem;
+  display: block;
+  font-size: 0.9rem;
+}
+
+.mobileGroupSublink:hover {
   text-decoration: underline;
   opacity: 1;
 }

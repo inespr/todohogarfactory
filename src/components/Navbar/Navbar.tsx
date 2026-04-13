@@ -23,12 +23,12 @@ export function Navbar() {
   const [openMobileCategory, setOpenMobileCategory] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<Product[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [subcategoriesMap, setSubcategoriesMap] = useState<Record<string, { slug: string; name: string }[]>>({});
+  const [subcategoriesMap, setSubcategoriesMap] = useState<Record<string, { slug: string; name: string; grupo?: string }[]>>({});
   const pathname = usePathname();
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'catalogoSubcategorias'), (snap) => {
-      const map: Record<string, { slug: string; name: string }[]> = {
+      const map: Record<string, { slug: string; name: string; grupo?: string }[]> = {
         electrodomesticos: [],
         sofas: [],
         hogar: [],
@@ -45,6 +45,7 @@ export function Navbar() {
         const data = doc.data() as Record<string, unknown>;
         const rawCategory = ((data.categoria as string) || '').trim().toLowerCase();
         const rawName = ((data.nombre as string) || '').trim();
+        const rawGrupo = ((data.grupo as string) || '').trim() || undefined;
         if (!rawCategory || !rawName) return;
 
         const normalizedCategory = rawCategory
@@ -69,7 +70,7 @@ export function Navbar() {
 
         if (slug && !seen[mainCategory].has(slug)) {
           seen[mainCategory].add(slug);
-          map[mainCategory].push({ slug, name: rawName });
+          map[mainCategory].push({ slug, name: rawName, grupo: rawGrupo });
         }
       });
 
@@ -116,7 +117,7 @@ export function Navbar() {
     setOpenDropdown(null);
   };
 
-  const getSubcategories = (category: ProductCategory): { slug: string; name: string }[] => {
+  const getSubcategories = (category: ProductCategory): { slug: string; name: string; grupo?: string }[] => {
     return subcategoriesMap[category] || [];
   };
 
@@ -240,15 +241,42 @@ export function Navbar() {
                 )}
                 {openDropdown === item.category && subcategories.length > 0 && (
                   <div className={styles.dropdownContent} onMouseEnter={() => handleMouseEnter(item.category)}>
-                    {subcategories.map((subcat) => (
-                      <Link
-                        key={subcat.slug}
-                        href={`${item.url}?subcategory=${encodeURIComponent(subcat.slug)}`}
-                        className={styles.dropdownItem}
-                      >
-                        {subcat.name}
-                      </Link>
-                    ))}
+                    {(() => {
+                      const ungrouped = subcategories.filter((s) => !s.grupo);
+                      const grouped = subcategories.reduce<Record<string, typeof subcategories>>((acc, s) => {
+                        if (!s.grupo) return acc;
+                        if (!acc[s.grupo]) acc[s.grupo] = [];
+                        acc[s.grupo].push(s);
+                        return acc;
+                      }, {});
+                      return (
+                        <>
+                          {ungrouped.map((subcat) => (
+                            <Link
+                              key={subcat.slug}
+                              href={`${item.url}?subcategory=${encodeURIComponent(subcat.slug)}`}
+                              className={styles.dropdownItem}
+                            >
+                              {subcat.name}
+                            </Link>
+                          ))}
+                          {Object.entries(grouped).map(([grupo, items]) => (
+                            <div key={grupo}>
+                              <div className={styles.dropdownGroupHeader}>{grupo}</div>
+                              {items.map((subcat) => (
+                                <Link
+                                  key={subcat.slug}
+                                  href={`${item.url}?subcategory=${encodeURIComponent(subcat.slug)}`}
+                                  className={styles.dropdownGroupItem}
+                                >
+                                  {subcat.name}
+                                </Link>
+                              ))}
+                            </div>
+                          ))}
+                        </>
+                      );
+                    })()}
                   </div>
                 )}
               </div>
@@ -352,16 +380,44 @@ export function Navbar() {
 
                 {isOpen && subcategories.length > 0 && (
                   <div className={styles.mobileSubmenu}>
-                    {subcategories.map((subcat) => (
-                      <Link
-                        key={subcat.slug}
-                        href={`${item.url}?subcategory=${encodeURIComponent(subcat.slug)}`}
-                        className={styles.mobileSublink}
-                        onClick={closeMobileMenu}
-                      >
-                        {subcat.name}
-                      </Link>
-                    ))}
+                    {(() => {
+                      const ungrouped = subcategories.filter((s) => !s.grupo);
+                      const grouped = subcategories.reduce<Record<string, typeof subcategories>>((acc, s) => {
+                        if (!s.grupo) return acc;
+                        if (!acc[s.grupo]) acc[s.grupo] = [];
+                        acc[s.grupo].push(s);
+                        return acc;
+                      }, {});
+                      return (
+                        <>
+                          {ungrouped.map((subcat) => (
+                            <Link
+                              key={subcat.slug}
+                              href={`${item.url}?subcategory=${encodeURIComponent(subcat.slug)}`}
+                              className={styles.mobileSublink}
+                              onClick={closeMobileMenu}
+                            >
+                              {subcat.name}
+                            </Link>
+                          ))}
+                          {Object.entries(grouped).map(([grupo, items]) => (
+                            <div key={grupo}>
+                              <div className={styles.mobileGroupHeader}>{grupo}</div>
+                              {items.map((subcat) => (
+                                <Link
+                                  key={subcat.slug}
+                                  href={`${item.url}?subcategory=${encodeURIComponent(subcat.slug)}`}
+                                  className={styles.mobileGroupSublink}
+                                  onClick={closeMobileMenu}
+                                >
+                                  {subcat.name}
+                                </Link>
+                              ))}
+                            </div>
+                          ))}
+                        </>
+                      );
+                    })()}
                   </div>
                 )}
               </div>
