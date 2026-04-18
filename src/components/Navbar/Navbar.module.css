@@ -1,5 +1,20 @@
 .header {
-  background-color: #3d4c6b; /* oscuro neutro: blanco legible y el logo naranja destaca */
+  background-color: #3d4c6b;
+  transition: box-shadow 0.3s ease, padding 0.3s ease;
+}
+
+.headerScrolled {
+  box-shadow: 0 2px 16px rgba(0,0,0,0.18);
+}
+
+.headerScrolled .navbar {
+  padding-top: 0.2rem;
+  padding-bottom: 0.2rem;
+}
+
+.headerScrolled .logoImage {
+  height: 38px !important;
+  width: auto !important;
 }
 
 .navbar {
@@ -9,6 +24,7 @@
   gap: 0.75rem;
   padding: 0.5rem 1rem;
   color: #ffffff;
+  transition: padding 0.3s ease;
 }
 
 .srOnly {

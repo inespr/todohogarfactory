@@ -9,10 +9,16 @@ import { Divider } from 'primereact/divider';
 export default function CookieModal({ onClose }: { onClose: () => void }) {
     const [analytics, setAnalytics] = useState(true);
     const [marketing, setMarketing] = useState(false);
+    const [isExiting, setIsExiting] = useState(false);
+
+    const handleClose = () => {
+        setIsExiting(true);
+        setTimeout(() => onClose(), 300);
+    };
 
     const save = () => {
         saveCookiePreferences({ necessary: true, analytics, marketing });
-        onClose();
+        handleClose();
     };
 
     // Estilo personalizado para el Switch Naranja
@@ -23,7 +29,7 @@ export default function CookieModal({ onClose }: { onClose: () => void }) {
     } as React.CSSProperties;
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
+        <div className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[110] flex items-end sm:items-center justify-center p-4 ${isExiting ? 'animate-fade-out' : 'animate-fade-in'}`}>
             {/* Estilos locales rápidos para asegurar el color naranja */}
             <style jsx global>{`
                 .p-inputswitch.p-inputswitch-checked .p-inputswitch-slider {
@@ -34,7 +40,7 @@ export default function CookieModal({ onClose }: { onClose: () => void }) {
                 }
             `}</style>
 
-            <div className="bg-white rounded-3xl overflow-hidden max-w-md w-full shadow-2xl flex flex-col max-h-[90vh]">
+            <div className={`bg-white rounded-3xl overflow-hidden max-w-md w-full shadow-2xl flex flex-col max-h-[90vh] ${isExiting ? 'animate-panel-exit' : 'animate-panel-enter'}`}>
 
                 {/* Cabecera */}
                 <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-white shrink-0">
@@ -44,7 +50,7 @@ export default function CookieModal({ onClose }: { onClose: () => void }) {
                         rounded
                         text
                         severity="secondary"
-                        onClick={onClose}
+                        onClick={handleClose}
                         className="p-button-sm shadow-none"
                     />
                 </div>

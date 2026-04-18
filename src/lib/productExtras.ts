@@ -3,7 +3,8 @@ export const EXCLUDED_EXTRA_FIELDS = new Set([
   'name', 'price', 'category', 'subcategoria', 'fotos',
   'urlImg', 'imageUrl', 'imagen', 'foto', 'img', 'url', 'image',
   'hasDefect', 'isOferta', 'stock', 'creadoEn', 'updatedAt', 'createdAt',
-  'observaciones', 'marca', 'medidas', 'offerPrice', 'grupo',
+  'observaciones', 'marca', 'offerPrice', 'grupo',
+  'instalacion', 'Instalacion', 'Cn2 Instalacion', 'cn2 instalacion', 'Cn2Instalacion', 'cn2Instalacion',
 ]);
 
 // Labels legibles para cada clave de Firestore
@@ -26,6 +27,7 @@ export const FIELD_LABELS: Record<string, string> = {
   clase: 'Clase energética',
   rpm: 'RPM',
   ruido: 'Ruido',
+  medidas: 'Medidas',
   dimensiones: 'Dimensiones',
   alto: 'Alto',
   ancho: 'Ancho',
@@ -106,6 +108,7 @@ export function buildExtras(raw: Record<string, unknown>): Record<string, string
   const extras: Record<string, string> = {};
   for (const [key, value] of Object.entries(raw)) {
     if (EXCLUDED_EXTRA_FIELDS.has(key)) continue;
+    if (fieldLabel(key) === 'Instalación') continue;
     if (typeof value !== 'string') continue;
     const v = value.trim();
     if (!v) continue;

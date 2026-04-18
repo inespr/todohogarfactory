@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Link from 'next/link';
 import { ProductListCard } from '@/components/ProductListCard';
@@ -55,18 +55,22 @@ export default function OfertasPage() {
         const results: OfertaProduct[] = [];
         await Promise.all(
           COLECCIONES.map(async (col) => {
-            const q = query(collection(db, col), where('isOferta', '==', true));
-            const snap = await getDocs(q);
+            const snap = await getDocs(collection(db, col));
             snap.docs.forEach((d) => {
               const raw = d.data() as Record<string, unknown>;
+              const price = (raw.price as number) ?? 0;
+              const offerPrice = raw.offerPrice as number | undefined;
+              const isOferta = raw.isOferta as boolean | undefined;
+              const hasHighDiscount = offerPrice && offerPrice > 0 && price > 0 && (price - offerPrice) / price > 0.3;
+              if (!isOferta && !hasHighDiscount) return;
               const fotosArr = (raw.fotos as string[]) || [];
               const singleImg = raw.urlImg || raw.imageUrl || raw.imagen || raw.foto || raw.img || raw.url || raw.image;
               const fotos = fotosArr.length > 0 ? fotosArr : (singleImg ? [singleImg as string] : []);
               results.push({
                 id: d.id,
                 name: raw.name as string,
-                price: (raw.price as number) ?? 0,
-                offerPrice: raw.offerPrice as number | undefined,
+                price,
+                offerPrice,
                 fotos,
                 category: (raw.category as string) || '',
                 subcategoria: (raw.subcategoria as string) || '',
@@ -293,6 +297,7 @@ export default function OfertasPage() {
                   stock={p.stock}
                   marca={p.marca}
                   specs={Object.entries(p.extras).slice(0, 6).map(([k, v]) => ({ label: fieldLabel(k), value: v }))}
+                  superOferta={!!(p.offerPrice && p.offerPrice > 0 && p.price > 0 && (p.price - p.offerPrice) / p.price > 0.3)}
                 />
               ))}
             </div>

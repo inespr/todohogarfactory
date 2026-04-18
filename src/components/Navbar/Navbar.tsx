@@ -8,9 +8,7 @@ import { InputIcon } from 'primereact/inputicon';
 import styles from './Navbar.module.css';
 import Link from 'next/link';
 import {
-  type Product,
   type ProductCategory,
-  searchProducts,
 } from '../../lib/products';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
@@ -21,10 +19,40 @@ export function Navbar() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openMobileCategory, setOpenMobileCategory] = useState<string | null>(null);
-  const [suggestions, setSuggestions] = useState<Product[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [subcategoriesMap, setSubcategoriesMap] = useState<Record<string, { slug: string; name: string; grupo?: string }[]>>({});
+  const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
+
+  type FbProduct = { id: string; name: string; price: number; offerPrice?: number; fotos: string[]; category: string; };
+  const [fbProducts, setFbProducts] = useState<FbProduct[]>([]);
+  const [fbLoaded, setFbLoaded] = useState(false);
+  const [productResults, setProductResults] = useState<FbProduct[]>([]);
+  const [catSuggestions, setCatSuggestions] = useState<{ name: string; slug: string; category: string }[]>([]);
+
+  const norm = (s: string) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+
+  const loadFbProducts = async () => {
+    if (fbLoaded) return;
+    const { getDocs: gd, collection: col } = await import('firebase/firestore');
+    const snap = await gd(col(db, 'electrodomesticos'));
+    const products: FbProduct[] = snap.docs.map(d => ({
+      id: d.id,
+      name: d.data().name as string ?? '',
+      price: d.data().price as number ?? 0,
+      offerPrice: d.data().offerPrice as number | undefined,
+      fotos: (d.data().fotos as string[]) || [],
+      category: 'electrodomesticos',
+    }));
+    setFbProducts(products);
+    setFbLoaded(true);
+  };
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'catalogoSubcategorias'), (snap) => {
@@ -145,14 +173,48 @@ export function Navbar() {
   const updateSuggestions = (value: string) => {
     const query = value.trim();
     if (!query) {
-      setSuggestions([]);
+      setProductResults([]);
+      setCatSuggestions([]);
       setShowSuggestions(false);
       return;
     }
 
-    const results = searchProducts({ query });
-    setSuggestions(results.slice(0, 6));
-    setShowSuggestions(results.length > 0);
+    // Sugerencias de categorías desde subcategoriesMap
+    const seen = new Set<string>();
+    const cats: { name: string; slug: string; category: string }[] = [];
+    const categoryRoutes: Record<string, string> = {
+      electrodomesticos: '/electrodomesticos',
+      sofas: '/sofas',
+      hogar: '/hogar',
+      descanso: '/descanso',
+    };
+    for (const [cat, subcats] of Object.entries(subcategoriesMap)) {
+      for (const s of subcats) {
+        if (norm(s.name).includes(norm(query)) && !seen.has(s.name)) {
+          seen.add(s.name);
+          cats.push({ name: s.name, slug: s.slug, category: categoryRoutes[cat] ?? `/${cat}` });
+        }
+      }
+    }
+    setCatSuggestions(cats.slice(0, 5));
+
+    // Productos de Firebase
+    const filtered = fbProducts
+      .filter(p => norm(p.name).includes(norm(query)))
+      .slice(0, 4);
+    setProductResults(filtered);
+
+    setShowSuggestions(cats.length > 0 || filtered.length > 0);
+  };
+
+  const highlightMatch = (text: string, query: string) => {
+    const idx = norm(text).indexOf(norm(query));
+    if (idx === -1) return <span>{text}</span>;
+    return (
+      <span>
+        <strong>{text.slice(0, idx + query.length)}</strong>{text.slice(idx + query.length)}
+      </span>
+    );
   };
 
   const handleSuggestionClick = (name: string) => {
@@ -183,35 +245,80 @@ export function Navbar() {
             updateSuggestions(value);
           }}
           onFocus={() => {
-            if (suggestions.length > 0) setShowSuggestions(true);
+            loadFbProducts();
+            if (catSuggestions.length > 0 || productResults.length > 0) setShowSuggestions(true);
           }}
           onBlur={() => {
-            // pequeño retardo para permitir hacer click en una sugerencia
-            setTimeout(() => setShowSuggestions(false), 120);
+            setTimeout(() => setShowSuggestions(false), 150);
           }}
         />
       </IconField>
 
-      {showSuggestions && suggestions.length > 0 && (
+      {showSuggestions && (catSuggestions.length > 0 || productResults.length > 0) && (
         <div className={styles.searchSuggestions} aria-label="Resultados de búsqueda sugeridos">
-          {suggestions.map((p) => (
+
+          {/* Sugerencias de categoría */}
+          {catSuggestions.map((s) => (
             <Link
-              key={p.id}
-              href={`/buscar?q=${encodeURIComponent(p.name)}`}
+              key={s.name}
+              href={`${s.category}?subcategory=${encodeURIComponent(s.slug)}`}
               className={styles.searchSuggestionItem}
-              onClick={() => handleSuggestionClick(p.name)}
+              onClick={() => { setShowSuggestions(false); closeMobileMenu(); }}
             >
-              <span className={styles.searchSuggestionName}>{p.name}</span>
-              <span className={styles.searchSuggestionCategory}>{p.category}</span>
+              <span className={styles.searchSuggestionName}>{highlightMatch(s.name, search)}</span>
+              <svg width="14" height="14" fill="none" stroke="#9ca3af" strokeWidth="2" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+                <path d="M7 17 17 7M7 7h10v10"/>
+              </svg>
             </Link>
           ))}
+
+          {/* Productos */}
+          {productResults.length > 0 && (
+            <>
+              <div style={{ padding: '0.5rem 0.75rem 0.25rem', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#9ca3af', borderTop: catSuggestions.length > 0 ? '1px solid #f3f4f6' : 'none', marginTop: catSuggestions.length > 0 ? '0.25rem' : 0 }}>
+                Productos
+              </div>
+              {productResults.map((p) => {
+                const hasOffer = p.offerPrice && p.offerPrice > 0 && p.offerPrice < p.price;
+                return (
+                  <Link
+                    key={p.id}
+                    href={`/electrodomesticos/${p.id}`}
+                    onClick={() => { setShowSuggestions(false); closeMobileMenu(); }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', textDecoration: 'none', color: '#111827' }}
+                    className={styles.searchSuggestionItem}
+                  >
+                    {p.fotos[0] && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={p.fotos[0]} alt="" style={{ width: 44, height: 44, objectFit: 'contain', borderRadius: 6, background: '#f9fafb', flexShrink: 0 }} />
+                    )}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: '0.85rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {highlightMatch(p.name, search)}
+                      </div>
+                      <div style={{ fontSize: '0.85rem', marginTop: 2 }}>
+                        {hasOffer ? (
+                          <>
+                            <span style={{ textDecoration: 'line-through', color: '#9ca3af', marginRight: 4 }}>{p.price.toFixed(2)} €</span>
+                            <span style={{ color: '#f37021', fontWeight: 700 }}>{p.offerPrice!.toFixed(2)} €</span>
+                          </>
+                        ) : (
+                          <span style={{ color: '#374151', fontWeight: 600 }}>{p.price.toFixed(2)} €</span>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </>
+          )}
         </div>
       )}
     </form>
   );
 
   return (
-    <header className={`${styles.header} fixed top-0 left-0 right-0 z-50`}>
+    <header className={`${styles.header} ${scrolled ? styles.headerScrolled : ''} fixed top-0 left-0 right-0 z-50`}>
       <nav className={styles.navbar}>
         <button
           type="button"
@@ -310,7 +417,7 @@ export function Navbar() {
 
       {/* Banner de envío */}
       <div className={styles.shippingBanner}>
-        🚚 Envío disponible solo en la provincia de Huelva
+        🚚 Envío disponible en toda la provincia de Huelva y alrededores
       </div>
 
       {mobileMenuOpen && (

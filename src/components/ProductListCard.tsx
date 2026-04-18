@@ -8,6 +8,12 @@ interface Spec {
   value: string;
 }
 
+interface CoMedida {
+  medida: string;
+  precio: number;
+  precioOferta?: number;
+}
+
 interface ProductListCardProps {
   href: string;
   image: string;
@@ -19,6 +25,8 @@ interface ProductListCardProps {
   stock: number;
   marca?: string;
   specs?: Spec[];
+  coMedidas?: CoMedida[];
+  superOferta?: boolean;
 }
 
 function fmt(n: number) {
@@ -43,18 +51,35 @@ function formatSpecValue(label: string, value: string): string {
 
 
 export function ProductListCard({
-  href, image, placeholder, name, subcategory, price, offerPrice, stock, marca, specs = [],
+  href, image, placeholder, name, subcategory, price, offerPrice, stock, marca, specs = [], coMedidas, superOferta,
 }: ProductListCardProps) {
-  const hasOffer = offerPrice != null && offerPrice > 0 && price != null && offerPrice < price;
-  const discount = hasOffer ? Math.round(((price! - offerPrice!) / price!) * 100) : 0;
   const sold = stock === 0;
+
+  // Si hay coMedidas, calcular precio mínimo efectivo y su medida
+  const medidaInfo = (() => {
+    if (!coMedidas || coMedidas.length === 0) return null;
+    const sorted = [...coMedidas].sort((a, b) => {
+      const pa = a.precioOferta ?? a.precio;
+      const pb = b.precioOferta ?? b.precio;
+      return pa - pb;
+    });
+    const cheapest = sorted[0];
+    return {
+      desde: cheapest.precioOferta ?? cheapest.precio,
+      medida: cheapest.medida,
+      total: coMedidas.length,
+    };
+  })();
+
+  const hasOffer = !medidaInfo && offerPrice != null && offerPrice > 0 && price != null && offerPrice < price;
+  const discount = hasOffer ? Math.round(((price! - offerPrice!) / price!) * 100) : 0;
 
   const visibleSpecs = specs;
 
   return (
     <Link
       href={href}
-      className="group flex flex-row bg-white rounded-xl border border-neutral-200 shadow-sm hover:shadow-md transition-all overflow-hidden"
+      className={`group flex flex-row rounded-xl border border-neutral-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 overflow-hidden ${sold ? 'bg-neutral-100 opacity-60' : 'bg-white'}`}
       style={{ minHeight: '120px' }}
     >
       {/* Imagen — 50% del ancho */}
@@ -63,15 +88,26 @@ export function ProductListCard({
           src={image || placeholder}
           alt={name}
           fill
-          className={`object-contain p-3 transition-transform duration-300 group-hover:scale-105 ${sold ? 'grayscale opacity-60' : ''}`}
+          className={`object-cover transition-transform duration-300 group-hover:scale-105 ${sold ? 'grayscale opacity-60' : ''}`}
           sizes="50vw"
           unoptimized
           onError={(e) => { (e.target as HTMLImageElement).src = placeholder; }}
         />
+        {superOferta && !sold && (
+          <div
+            className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-center gap-1 py-1.5"
+            style={{ background: 'linear-gradient(90deg, #dc2626, #f97316)' }}
+          >
+            <span className="text-white text-[11px] font-black uppercase tracking-widest">🔥 Super Oferta</span>
+          </div>
+        )}
         {sold && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center gap-1">
             <span className="bg-red-600 text-white text-xs font-bold uppercase tracking-widest px-2 py-1 rounded">
               Vendido
+            </span>
+            <span className="bg-neutral-700 text-white text-[10px] font-semibold px-2 py-0.5 rounded">
+              Entra para pedirlo
             </span>
           </div>
         )}
@@ -91,7 +127,18 @@ export function ProductListCard({
             )}
           </div>
 
-          {price != null && price > 0 && (
+          {medidaInfo ? (
+            <div className="flex flex-col items-end shrink-0 gap-0.5">
+              <span className="text-[9px] text-neutral-400 leading-none">desde</span>
+              <span className="text-sm font-extrabold leading-none" style={{ color: '#f97316' }}>
+                {fmt(medidaInfo.desde)}
+              </span>
+              <span className="text-[9px] text-neutral-500 leading-none">{medidaInfo.medida}</span>
+              {medidaInfo.total > 1 && (
+                <span className="text-[9px] text-orange-500 font-medium leading-none">+{medidaInfo.total - 1} medidas</span>
+              )}
+            </div>
+          ) : price != null && price > 0 ? (
             <div className="flex flex-col items-end shrink-0 gap-0.5">
               {hasOffer && (
                 <div className="flex items-center gap-1">
@@ -109,7 +156,7 @@ export function ProductListCard({
               </span>
               <span className="text-[9px] text-neutral-400">IVA incl.</span>
             </div>
-          )}
+          ) : null}
         </div>
 
         {/* Specs en 2 columnas */}
@@ -127,7 +174,7 @@ export function ProductListCard({
         {/* Disponibilidad */}
         <div className="mt-2">
           <span className={`text-[10px] font-semibold ${sold ? 'text-red-500' : 'text-emerald-600'}`}>
-            {sold ? '● Agotado' : '● Disponible'}
+            {sold ? '● Entra para pedirlo' : '● Disponible'}
           </span>
         </div>
       </div>

@@ -114,12 +114,12 @@ export default function SofaDetailPage() {
         <span className="text-neutral-700 font-medium truncate max-w-[200px]">{product.name}</span>
       </nav>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+      <div className="detail-grid">
 
         {/* Columna imágenes */}
         <div className="flex flex-col gap-3">
           {/* Imagen principal */}
-          <div className="relative bg-white rounded-2xl border border-neutral-200 overflow-hidden" style={{ height: '480px' }}>
+          <div className="relative bg-white rounded-2xl border border-neutral-200 overflow-hidden" style={{ height: '780px' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={mainImg || '/placeholders/sofas.svg'}
@@ -187,15 +187,39 @@ export default function SofaDetailPage() {
               </span>
             )}
             <span className={`px-3 py-1 rounded-full text-xs font-semibold ${product.stock > 0 ? 'border text-white' : 'bg-red-50 border border-red-200 text-red-600'}`} style={product.stock > 0 ? { backgroundColor: '#16a34a', borderColor: '#15803d' } : {}}>
-              {product.stock > 0 ? '● Disponible' : '● Agotado'}
+              {product.stock > 0 ? '● Disponible' : '● Entra para pedirlo'}
             </span>
           </div>
+
+          {product.stock === 0 && (
+            <div className="rounded-xl border border-orange-200 bg-orange-50 p-4 flex flex-col gap-3">
+              <p className="text-sm font-semibold text-orange-800">Este artículo está vendido pero se puede encargar</p>
+              <div className="flex flex-wrap gap-2">
+                <a
+                  href={`https://wa.me/34692211145?text=Hola%2C%20quiero%20encargar%3A%20${encodeURIComponent(product.name)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white"
+                  style={{ backgroundColor: '#16a34a' }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="w-4 h-4" fill="currentColor" aria-hidden="true"><path d="M16.04 5C10.55 5 6.11 9.44 6.11 14.93c0 2.1.61 4.03 1.78 5.72L6 26.96l6.48-1.87a9.97 9.97 0 0 0 3.56.65h.01c5.49 0 9.93-4.44 9.93-9.93C26 9.44 21.55 5 16.04 5Zm0 17.9h-.01a8 8 0 0 1-3.43-.81l-.25-.12-3.84 1.11 1.03-3.75-.16-.27a7.9 7.9 0 0 1-1.22-4.24c0-4.38 3.57-7.95 7.96-7.95 2.13 0 4.13.83 5.63 2.33a7.9 7.9 0 0 1 2.33 5.63c0 4.39-3.57 7.96-7.94 7.96Z" /></svg>
+                  Encargar por WhatsApp
+                </a>
+                <a
+                  href="tel:+34692211145"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold border border-neutral-300 text-neutral-700 bg-white"
+                >
+                  📞 Llamar: 692 211 145
+                </a>
+              </div>
+            </div>
+          )}
 
           {/* Precio */}
           {precioFormateado && (
             <div className="flex flex-col gap-2">
 
-              {product.offerPrice && product.offerPrice < product.price && (
+              {product.stock !== 0 && product.offerPrice && product.offerPrice < product.price && (
                 <div className="flex items-center gap-2">
                   {/* % descuento */}
                   <span className="text-xs font-bold px-2 py-1 rounded" style={{ backgroundColor: '#f97316', color: '#ffffff' }}>
@@ -209,8 +233,8 @@ export default function SofaDetailPage() {
               )}
 
               {/* Precio principal */}
-              <span className="text-4xl font-extrabold text-red-600 leading-none">
-                {product.offerPrice && product.offerPrice < product.price
+              <span className={`leading-none ${product.stock === 0 ? 'text-2xl font-semibold text-neutral-400' : 'text-4xl font-extrabold text-red-600'}`}>
+                {product.offerPrice && product.offerPrice < product.price && product.stock !== 0
                   ? ofertaFormateado
                   : precioFormateado}
               </span>
@@ -218,6 +242,7 @@ export default function SofaDetailPage() {
               {/* Info extra */}
               <div className="flex flex-col text-sm text-neutral-500 gap-1">
                 <span className="underline cursor-pointer">IVA incl.</span>
+                {product.stock === 0 && <span className="text-xs text-neutral-400">* precio orientativo, puede variar</span>}
                 <span className="underline cursor-pointer text-blue-600">Envío disponible</span>
                 <span className="text-emerald-700 font-semibold">✓ Garantía 3 años en todos nuestros productos</span>
               </div>
@@ -311,7 +336,7 @@ export default function SofaDetailPage() {
                 aria-label="Cerrar vista detallada"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
               </button>
             </div>
@@ -319,6 +344,8 @@ export default function SofaDetailPage() {
               <Image
                 src={mainImg || '/placeholders/sofas.svg'}
                 alt={product.name}
+                height={300}
+                width={300}
                 className="w-full max-h-[75vh] object-contain rounded-lg"
               />
             </div>

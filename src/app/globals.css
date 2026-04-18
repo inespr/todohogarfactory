@@ -91,6 +91,44 @@ body {
   }
 }
 
+.three-col-grid {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 1rem !important;
+}
+
+@media (min-width: 640px) {
+  .three-col-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+.detail-grid {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 2rem !important;
+  align-items: start !important;
+}
+
+@media (min-width: 768px) {
+  .detail-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+  }
+}
+
+.footer-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 2rem !important;
+  margin-bottom: 2.5rem !important;
+}
+
+@media (max-width: 767px) {
+  .footer-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
 /* Scrollbar oculta para filtros horizontales */
 .scrollbar-none {
   -ms-overflow-style: none;
@@ -98,6 +136,84 @@ body {
 }
 .scrollbar-none::-webkit-scrollbar {
   display: none;
+}
+
+/* ── Keyframes ───────────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideLeft {
+  from { opacity: 0; transform: translateX(-14px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Banner de cookies — entra/sale desde el borde inferior */
+@keyframes bannerEnter {
+  from { transform: translateY(110%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+@keyframes bannerExit {
+  from { transform: translateY(0);    opacity: 1; }
+  to   { transform: translateY(110%); opacity: 0; }
+}
+
+/* Panel / modal — sube desde abajo y baja al cerrar */
+@keyframes panelEnter {
+  from { transform: translateY(32px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+@keyframes panelExit {
+  from { transform: translateY(0);    opacity: 1; }
+  to   { transform: translateY(32px); opacity: 0; }
+}
+
+@keyframes shimmer {
+  to { background-position: 200% center; }
+}
+
+/* ── Clases de animación ─────────────────────────────────────── */
+.animate-fade-in    { animation: fadeIn      0.3s ease-out  both; }
+.animate-fade-out   { animation: fadeOut     0.25s ease-in  both; }
+.animate-slide-up   { animation: slideUp     0.4s ease-out  both; }
+.animate-slide-left { animation: slideLeft   0.4s ease-out  both; }
+.animate-scale-in   { animation: scaleIn     0.25s ease-out both; }
+
+.animate-banner-enter { animation: bannerEnter 0.4s cubic-bezier(0.34,1.56,0.64,1) both; }
+.animate-banner-exit  { animation: bannerExit  0.35s ease-in both; }
+
+.animate-panel-enter  { animation: panelEnter  0.35s cubic-bezier(0.34,1.56,0.64,1) both; }
+.animate-panel-exit   { animation: panelExit   0.3s ease-in  both; }
+
+/* Delays de stagger */
+.anim-d50  { animation-delay: 50ms;  }
+.anim-d100 { animation-delay: 100ms; }
+.anim-d150 { animation-delay: 150ms; }
+.anim-d200 { animation-delay: 200ms; }
+.anim-d250 { animation-delay: 250ms; }
+.anim-d300 { animation-delay: 300ms; }
+
+/* Skeleton shimmer para estados de carga */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: 8px;
 }
 
 /* Compensa el header fijo (navbar + buscador + banner en móvil) */

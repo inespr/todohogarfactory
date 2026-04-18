@@ -138,6 +138,7 @@ export default function Home() {
                     stock={p.stock}
                     marca={p.marca}
                     specs={Object.entries(p.extras).slice(0, 6).map(([k, v]) => ({ label: fieldLabel(k), value: v }))}
+                    superOferta={!!(p.offerPrice && p.price > 0 && (p.price - p.offerPrice) / p.price > 0.3)}
                   />
                 ))}
               </div>

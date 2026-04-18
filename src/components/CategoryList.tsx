@@ -21,6 +21,9 @@ type CategoryItem = {
   hasDefect?: boolean;
   marca?: string;
   extras: Record<string, string>;
+  coNucleo?: string;
+  displayCategory: string;
+  coMedidas?: { medida: string; precio: number; precioOferta?: number }[];
 };
 
 interface CategoryListProps {
@@ -131,6 +134,7 @@ export function CategoryList({ collection: collectionName, placeholder, detailBa
   const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('Todos');
   const [selectedAttr, setSelectedAttr] = useState<string>('');
+  const [selectedTipo, setSelectedTipo] = useState<string>('');
   const [sortBy, setSortBy] = useState<string>('default');
   const [loading, setLoading] = useState(true);
 
@@ -150,7 +154,7 @@ export function CategoryList({ collection: collectionName, placeholder, detailBa
     setSelectedCategory(normalizeSubcategorySlug(subcategoryParam));
   }, [subcategoryParam]);
 
-  useEffect(() => { setSelectedAttr(''); }, [selectedCategory]);
+  useEffect(() => { setSelectedAttr(''); setSelectedTipo(''); }, [selectedCategory]);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -158,9 +162,13 @@ export function CategoryList({ collection: collectionName, placeholder, detailBa
         const snap = await getDocs(collection(db, collectionName));
         const data: CategoryItem[] = snap.docs.map((d) => {
           const raw = d.data() as Record<string, unknown>;
+          const subcat = (raw.subcategoria as string || '').trim();
+          const isColchon = subcat.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase() === 'colchon';
+          const coModelo = raw.coModelo as string | undefined;
+          const displayName = isColchon && coModelo ? `Colchón ${coModelo}` : (raw.name as string);
           return {
             id: d.id,
-            name: raw.name as string,
+            name: displayName,
             observaciones: raw.observaciones as string || '',
             price: raw.price as number | undefined,
             offerPrice: raw.offerPrice as number | undefined,
@@ -176,6 +184,20 @@ export function CategoryList({ collection: collectionName, placeholder, detailBa
             hasDefect: raw.hasDefect as boolean | undefined,
             marca: raw.marca as string | undefined,
             extras: buildExtras(raw),
+            coNucleo: raw.coNucleo as string | undefined,
+            coMedidas: (() => {
+              const arr = raw.coMedidas as Array<Record<string, unknown>> | undefined;
+              return arr?.map((m) => ({
+                medida: m.medida as string,
+                precio: m.precio as number,
+                precioOferta: m.precioOferta as number | undefined,
+              }));
+            })(),
+            displayCategory: (() => {
+              const isColchon = subcat.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase() === 'colchon';
+              if (isColchon) return 'Colchones';
+              return subcat || (raw.category as string) || collectionName;
+            })(),
           };
         });
 
@@ -184,7 +206,7 @@ export function CategoryList({ collection: collectionName, placeholder, detailBa
 
         const seen = new Map<string, string>();
         data.forEach((p) => {
-          const raw = (p.subcategoria || p.category || 'Sin categoría').trim();
+          const raw = p.displayCategory.trim();
           if (!seen.has(raw.toLowerCase())) seen.set(raw.toLowerCase(), raw);
         });
         setCategories(['Todos', ...Array.from(seen.values())]);
@@ -198,10 +220,14 @@ export function CategoryList({ collection: collectionName, placeholder, detailBa
   }, [collectionName]);
 
   useEffect(() => {
+    const isColchones = normalizeForCompare(selectedCategory) === 'colchone';
     let updated = [...items];
     if (selectedCategory !== 'Todos') {
       if (selectedCategory === 'Ocasión') updated = updated.filter((p) => p.hasDefect);
-      else updated = updated.filter((p) => normalizeForCompare(p.subcategoria || p.category || '') === normalizeForCompare(selectedCategory));
+      else updated = updated.filter((p) => normalizeForCompare(p.displayCategory) === normalizeForCompare(selectedCategory));
+    }
+    if (selectedTipo && isColchones) {
+      updated = updated.filter(p => p.coNucleo === selectedTipo);
     }
     if (selectedAttr) {
       const config = getAttrConfig(selectedCategory);
@@ -214,20 +240,37 @@ export function CategoryList({ collection: collectionName, placeholder, detailBa
     else if (sortBy === 'name-desc') updated.sort((a, b) => b.name.localeCompare(a.name));
     updated.sort((a, b) => ((a.stock ?? 0) === 0 ? 1 : 0) - ((b.stock ?? 0) === 0 ? 1 : 0));
     setFilteredItems(updated);
-  }, [selectedCategory, selectedAttr, sortBy, items]);
+  }, [selectedCategory, selectedAttr, selectedTipo, sortBy, items]);
 
   const countFor = (cat: string) => {
     if (cat === 'Todos') return items.length;
-    return items.filter((p) => normalizeForCompare(p.subcategoria || p.category || '') === normalizeForCompare(cat)).length;
+    return items.filter((p) => normalizeForCompare(p.displayCategory) === normalizeForCompare(cat)).length;
   };
 
-  if (loading) return <p className="opacity-70 py-10 text-center">Cargando productos…</p>;
+  if (loading) return (
+    <div className="flex gap-6 items-start animate-fade-in">
+      <div className="hidden lg:flex flex-col w-52 shrink-0 gap-2 p-3">
+        {[80, 60, 72, 56, 64].map((w, i) => (
+          <div key={i} className="skeleton h-8" style={{ width: `${w}%` }} />
+        ))}
+      </div>
+      <div className="flex-1 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="skeleton h-32 rounded-xl" style={{ animationDelay: `${i * 60}ms` }} />
+        ))}
+      </div>
+    </div>
+  );
 
+  const isColchonesSelected = normalizeForCompare(selectedCategory) === 'colchone';
   const attrConfig = getAttrConfig(selectedCategory);
   const itemsInCategory = selectedCategory === 'Todos'
     ? items
-    : items.filter(p => normalizeForCompare(p.subcategoria || p.category || '') === normalizeForCompare(selectedCategory));
+    : items.filter(p => normalizeForCompare(p.displayCategory) === normalizeForCompare(selectedCategory));
   const attrValues = attrConfig ? getAttrValues(attrConfig, itemsInCategory) : [];
+  const tipoValues = isColchonesSelected
+    ? [...new Set(itemsInCategory.map(p => p.coNucleo).filter(Boolean) as string[])].sort()
+    : [];
 
   return (
     <div className="flex gap-6 items-start">
@@ -258,6 +301,39 @@ export function CategoryList({ collection: collectionName, placeholder, detailBa
             );
           })}
         </ul>
+
+        {/* Filtro por tipo de colchón (sidebar) */}
+        {isColchonesSelected && tipoValues.length > 1 && (
+          <div className="border-t border-neutral-100">
+            <div className="px-4 py-3 border-b border-neutral-100">
+              <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Núcleo</span>
+            </div>
+            <ul className="py-2">
+              <li>
+                <button
+                  onClick={() => setSelectedTipo('')}
+                  className={`w-full flex items-center px-4 py-2 text-sm transition-colors ${selectedTipo === ''
+                    ? 'bg-orange-50 text-orange-700 font-semibold border-l-2 border-orange-500'
+                    : 'text-neutral-700 hover:bg-neutral-50'}`}
+                >
+                  Todos
+                </button>
+              </li>
+              {tipoValues.map(val => (
+                <li key={val}>
+                  <button
+                    onClick={() => setSelectedTipo(val === selectedTipo ? '' : val)}
+                    className={`w-full flex items-center px-4 py-2 text-sm transition-colors ${selectedTipo === val
+                      ? 'bg-orange-50 text-orange-700 font-semibold border-l-2 border-orange-500'
+                      : 'text-neutral-700 hover:bg-neutral-50'}`}
+                  >
+                    {val}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {/* Filtro por atributo (sidebar) */}
         {attrConfig && attrValues.length > 1 && (
@@ -315,6 +391,25 @@ export function CategoryList({ collection: collectionName, placeholder, detailBa
             ))}
           </div>
 
+          {/* Filtro por tipo de colchón móvil */}
+          {isColchonesSelected && tipoValues.length > 1 && (
+            <div className="flex lg:hidden overflow-x-auto gap-2 scrollbar-none -mx-3 sm:-mx-4 px-3 sm:px-4 pb-1">
+              <span className="shrink-0 text-[10px] font-semibold text-neutral-400 uppercase self-center pr-1">Núcleo:</span>
+              {tipoValues.map(val => (
+                <button
+                  key={val}
+                  onClick={() => setSelectedTipo(val === selectedTipo ? '' : val)}
+                  className="shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all"
+                  style={selectedTipo === val
+                    ? { backgroundColor: '#f97316', color: '#ffffff' }
+                    : { backgroundColor: '#f3f4f6', color: '#4b5563' }}
+                >
+                  {val}
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Filtros por atributo móvil */}
           {attrConfig && attrValues.length > 1 && (
             <div className="flex lg:hidden overflow-x-auto gap-2 scrollbar-none -mx-3 sm:-mx-4 px-3 sm:px-4 pb-1">
@@ -358,20 +453,26 @@ export function CategoryList({ collection: collectionName, placeholder, detailBa
           <p className="text-center opacity-70 py-16">No hay productos en esta categoría.</p>
         ) : (
           <div className="list-grid">
-            {filteredItems.map((p) => (
-              <ProductListCard
+            {filteredItems.map((p, i) => (
+              <div
                 key={p.id}
-                href={`${detailBase}/${p.id}`}
-                image={p.fotos[0] || ''}
-                placeholder={placeholder}
-                name={p.name}
-                subcategory={p.subcategoria || p.category}
-                price={p.price}
-                offerPrice={p.offerPrice}
-                stock={p.stock ?? 0}
-                marca={p.marca}
-                specs={Object.entries(p.extras).slice(0, 6).map(([k, v]) => ({ label: fieldLabel(k), value: v }))}
-              />
+                className="animate-slide-up"
+                style={{ animationDelay: `${Math.min(i * 40, 300)}ms` }}
+              >
+                <ProductListCard
+                  href={`${detailBase}/${p.id}`}
+                  image={p.fotos[0] || ''}
+                  placeholder={placeholder}
+                  name={p.name}
+                  subcategory={p.subcategoria || p.category}
+                  price={p.price}
+                  offerPrice={p.offerPrice}
+                  stock={p.stock ?? 0}
+                  marca={p.marca}
+                  specs={Object.entries(p.extras).slice(0, 6).map(([k, v]) => ({ label: fieldLabel(k), value: v }))}
+                  coMedidas={p.coMedidas}
+                />
+              </div>
             ))}
           </div>
         )}
